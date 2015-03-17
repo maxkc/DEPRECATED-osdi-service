@@ -1,0 +1,15 @@
+{
+  "node"      : true,
+  "undef"     : true,
+  "unused"    : true,
+  "lastsemic" : true,
+  "immed"     : true,
+  "indent"    : 2,
+  "laxbreak"  : true,
+  "latedef"   : "nofunc",
+  "newcap"    : true,
+  "freeze"    : true,
+  "quotmark"  : "single",
+  "maxlen"    : 80,
+  "boss"      : true
+}

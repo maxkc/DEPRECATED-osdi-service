@@ -1,0 +1,36 @@
+{
+  "name": "osdi-service",
+  "version": "0.0.0",
+  "description": "Provides NGP VAN resources via the OSDI API specification.",
+  "main": "app.js",
+  "private": true,
+  "engines": {
+    "node": "0.10.x"
+  },
+  "scripts": {
+    "start": "node app",
+    "test": "mocha test",
+    "coverage": "istanbul cover _mocha test --recursive -- -u exports -R spec && open coverage/lcov-report/PROJECT_NAME/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NGPVAN/osdi-service.git"
+  },
+  "author": "NGPVAN",
+  "bugs": {
+    "url": "https://github.com/NGPVAN/osdi-service/issues"
+  },
+  "homepage": "https://github.com/NGPVAN/osdi-service",
+  "readmeFilename": "README.md",
+  "devDependencies": {
+    "istanbul": "^0.3.2",
+    "mocha": "^1.21.4",
+    "jshint": "~2.5.5"
+  },
+  "dependencies": {
+    "body-parser": "^1.12.2",
+    "cors": "^2.5.3",
+    "express": "^4.12.2",
+    "express-ie-cors": "^0.9.4"
+  }
+}
