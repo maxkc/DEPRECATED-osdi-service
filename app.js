@@ -12,7 +12,12 @@ app.use(iefix({ contentType: 'application/x-www-form-urlencoded' }));
 app.use(bodyParser.json());
 app.use(cors());
 
-routes(app);
+var key;
+for (key in routes) {
+  if (routes.hasOwnProperty(key)) {
+    routes[key](app);
+  }
+}
 
 if (!module.parent) {
   var port = config.get('port');

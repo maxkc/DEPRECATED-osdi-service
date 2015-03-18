@@ -1,5 +1,5 @@
 
-var notSupported = require('./middleware/notSupported');
+var notSupported = require('../middleware/notSupported');
 
 function apiRoot(req, res) {
   return notSupported.send(req, res);
