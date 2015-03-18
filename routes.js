@@ -1,28 +1,13 @@
 
-function notSupported(req, res) {
-  var error = {
-    'request_type': 'atomic',
-    'response_code': 500,
-    'resource_status': [
-      {
-        'resource': '*',
-        'response_code': 500,
-        'errors': [
-          {
-            'code': 'NOT_SUPPORTED',
-            'description': 'The system does not support resources of this type.'
-          }
-        ]
-      }
-    ]
-  };
+var notSupported = require('./middleware/notSupported');
 
-  return res.status(500).send(error);
+function apiRoot(req, res) {
+  return notSupported.send(req, res);
 }
 
 
 module.exports = function (app) {
-  app.get('/api/v1/', notSupported);
+  app.get('/api/v1/', apiRoot);
 };
 
 
