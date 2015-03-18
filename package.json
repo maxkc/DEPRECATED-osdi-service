@@ -25,7 +25,9 @@
   "devDependencies": {
     "istanbul": "^0.3.2",
     "mocha": "^1.21.4",
-    "jshint": "~2.5.5"
+    "jshint": "~2.5.5",
+    "should": "^5.2.0",
+    "supertest": "^0.15.0"
   },
   "dependencies": {
     "body-parser": "^1.12.2",

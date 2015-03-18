@@ -3,5 +3,5 @@
 
 ## 0.0.0
 
-* Stand up endpoint.  No services supported.
+* Stand up endpoint.  No resources supported.
 
