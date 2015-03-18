@@ -15,7 +15,7 @@ app.use(cors());
 routes(app);
 
 if (!module.parent) {
-  var port = config.port;
+  var port = config.get('port');
   app.listen(port, function() {
     console.log('Listening on %d.', port);
   });

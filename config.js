@@ -7,4 +7,13 @@ var cfg = {
 
 };
 
-module.exports = cfg;
+module.exports = {
+  get: function (varName) {
+    if (cfg[varName]) {
+      return cfg[varName];
+    }
+    else {
+      return '';
+    }
+  }
+};
