@@ -1,6 +1,5 @@
 
-var notSupported = require('../middleware/notSupported'),
-    contentType = require('../middleware/contentType');
+var contentType = require('../middleware/contentType');
 
 function apiRoot(req, res) {
   var answer = {

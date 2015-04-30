@@ -6,7 +6,7 @@ var express = require('express'),
     cors = require('cors'),
     routes = require('./routes'),
     config = require('./config'),
-    notSupported = require('./middleware/notSupported');
+    notSupported = require('./middleware/notSupported'),
     app = module.exports = express();
 
 app.use(iefix({ contentType: 'application/x-www-form-urlencoded' }));
