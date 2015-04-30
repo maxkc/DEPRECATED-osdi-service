@@ -6,6 +6,7 @@ var express = require('express'),
     cors = require('cors'),
     routes = require('./routes'),
     config = require('./config'),
+    notSupported = require('./middleware/notSupported');
     app = module.exports = express();
 
 app.use(iefix({ contentType: 'application/x-www-form-urlencoded' }));
@@ -18,6 +19,14 @@ for (key in routes) {
     routes[key](app);
   }
 }
+
+app.all('/api/v1/*', function (req, res) {
+  return notSupported.send(req, res);
+});
+
+app.all('/*', function (req, res) {
+  res.sendStatus(404);
+});
 
 if (!module.parent) {
   var port = config.get('port');
