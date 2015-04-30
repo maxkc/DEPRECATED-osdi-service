@@ -8,9 +8,9 @@ var should = require('should'),
 
 describe('notSupported', function() {
 
-  it('should not support anything', function(done) {
+  it('should not support any resources', function(done) {
     supertest(app).
-      get('/api/v1/').
+      get('/api/v1/questions').
       expect(500, function(err, res) {
         should.equal(res.body.request_type, 'atomic');
         should.equal(res.body.response_code, 500);
@@ -23,6 +23,12 @@ describe('notSupported', function() {
           'NOT_SUPPORTED');
         done();
       });
+  });
+
+  it('should 404 non-api requests', function(done) {
+    supertest(app).
+      get('/allTheThings').
+      expect(404, done);
   });
 
 });
