@@ -27,7 +27,8 @@
     "mocha": "^1.21.4",
     "jshint": "~2.5.5",
     "should": "^5.2.0",
-    "supertest": "^0.15.0"
+    "supertest": "^0.15.0",
+    "sinon": "^1.14.1"
   },
   "dependencies": {
     "basic-auth": "^1.0.1",
