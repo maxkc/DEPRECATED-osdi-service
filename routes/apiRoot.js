@@ -15,9 +15,9 @@ function apiRoot(req, res) {
         href: root,
         title: 'NGP VAN OSDI Service Entry Point'
       },
-      "osdi:tags": {
-        "href": root + 'tags',
-        "title": "The collection of tags in the system"
+      'osdi:tags': {
+        'href': root + 'tags',
+        'title': 'The collection of tags in the system'
       }
     }
   };
