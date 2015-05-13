@@ -3,7 +3,10 @@ var cfg = {
   
   // Try to default from process.env:
   // http://nodejs.org/api/process.html#process_process_env
-  port : process.env.PORT || 8000
+  port : process.env.PORT || 8000,
+  
+  apiEndpoint: 'https://ngpvan-osdi-service.herokuapp.com/api/v1/',
+  vanEndpoint = 'https://api.securevan.com/v4/'
 
 };
 
