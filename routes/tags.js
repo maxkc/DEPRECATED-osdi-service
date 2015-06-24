@@ -39,6 +39,16 @@ function badRequest(error) {
   return res.status(response_code).send(answer);
 };
 
+function createTagFromActivistCode(activistCode) {
+    var answer = osdi.createCommonItem(
+      activistCode.name,
+      activistCode.description);
+
+    osdi.addIdentifier(answer, 'VAN:' + activistCode.activistCodeId);
+    osdi.addLink(answer, 'self', 'tags/' + activistCode.activistCodeId);
+    return answer;
+}
+
 function getOne(req, res) {
   var id = 0;
 
@@ -53,12 +63,7 @@ function getOne(req, res) {
       return res.status(404).end();
     }
 
-    var answer = osdi.createCommonItem(
-      activistCode.name,
-      activistCode.description);
-
-    osdi.addIdentifier(answer, 'VAN:' + activistCode.activistCodeId);
-    osdi.addLink(answer, 'self', 'tags/' + id);
+    var answer = createTagFromActivistCode(activistCode);
 
     return res.status(200).send(answer);
   };
@@ -77,36 +82,15 @@ function getAll(req, res) {
       return res.status(404).end();
     }
 
-    var answer = {
-      "total_pages": 99,
-      "per_page": 30,
-      "page": 2,
-      "total_records": 250,
-      "data": activistCodes,
-      "_links": {
+    var page = 2;
+    var perPage = 2;
+    var totalRecords = activistCodes.count;
 
-      },
-      "_embedded": {
-        "osdi:tags": [
-          {
-            "identifiers": [
-              "VAN:1234"
-            ],
-            "origin_system": "VAN",
-            "created_date": "blah",
-            "modified_date": "bleh",
-            "name": "Volunteers",
-            "description": "volunteers are people who volunteer",
-            "_links": {
-              "self": {
-                "href": "van_url"
-            }, "osdi:taggings":{}
-          }
-          }
-        ]
-      }
-    };
+    var totalPages = Math.ceil(totalRecords / perPage);
+    var answer = osdi.createPaginatedItem(page, perPage, totalPages,
+      totalRecords, 'tags');
 
+    osdi.addEmbeddedItems(answer, activistCodes.items, createTagFromActivistCode);
     return res.status(200).send(answer);
   };
 
