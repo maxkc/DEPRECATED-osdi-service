@@ -8,35 +8,39 @@ var contentType = require('../middleware/contentType'),
 var root = config.get('apiEndpoint');
 var vanEndpoint = config.get('vanEndpoint');
 
-var unauthorized = function() {
-  return res.status(401).end();
+var unauthorized = function(res) {
+  return function() {
+    return res.status(401).end();
+  }
 };
 
 
-function badRequest(error) {
-  var response_code = 500;
-  if (!error) {
-    response_code = 400;
+function badRequest(res) {
+  return function(error) {
+    var response_code = 500;
+    if (!error) {
+      response_code = 400;
+    }
+
+    var answer = {
+      'request_type': 'atomic',
+      'response_code': response_code,
+      'resource_status': [
+        {
+          'resource': 'osd:tags',
+          'response_code': response_code,
+          'errors': [
+            {
+              'code': 'UNKNOWN',
+              'description': 'Translating VAN errors is not yet supported.'
+            }
+          ]
+        }
+      ]
+    };
+
+    return res.status(response_code).send(answer);
   }
-
-  var answer = {
-    'request_type': 'atomic',
-    'response_code': response_code,
-    'resource_status': [
-      {
-        'resource': 'osd:tags',
-        'response_code': response_code,
-        'errors': [
-          {
-            'code': 'UNKNOWN',
-            'description': 'Translating VAN errors is not yet supported.'
-          }
-        ]
-      }
-    ]
-  };
-
-  return res.status(response_code).send(answer);
 };
 
 function createTagFromActivistCode(activistCode) {
@@ -72,15 +76,15 @@ function getOne(req, res) {
 
   ngpvanAPIClient.getActivistCode(vanEndpoint,
     credentials.apiKey, credentials.dbMode, id,
-    unauthorized, badRequest, success);
+    unauthorized(res), badRequest(res), success);
 }
 
 function getAll(req, res) {
-
   var success = function(activistCodes) {
     if (!(activistCodes && activistCodes.items)) {
       return res.status(404).end();
     }
+    return res.send(activistCodes)
 
     var page = 2;
     var perPage = 2;
@@ -96,10 +100,9 @@ function getAll(req, res) {
 
   var credentials = getCredentials(req);
 
-
   ngpvanAPIClient.getActivistCodes(vanEndpoint,
     credentials.apiKey, credentials.dbMode,
-    unauthorized, badRequest, success);
+    unauthorized(res), badRequest(res), success);
 }
 
 function getCredentials(req) {
@@ -118,5 +121,3 @@ module.exports = function (app) {
   app.get('/api/v1/tags', contentType, getAll);
   app.get('/api/v1/tags/:id', contentType, getOne);
 };
-
-
