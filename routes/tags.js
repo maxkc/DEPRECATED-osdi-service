@@ -14,7 +14,6 @@ var unauthorized = function(res) {
   }
 };
 
-
 function badRequest(res) {
   return function(error) {
     var response_code = 500;
@@ -80,14 +79,15 @@ function getOne(req, res) {
 }
 
 function getAll(req, res) {
+  var pagination = osdi.getPaginationOptions(req);
+
   var success = function(activistCodes) {
     if (!(activistCodes && activistCodes.items)) {
       return res.status(404).end();
     }
-    return res.send(activistCodes)
 
-    var page = 2;
-    var perPage = 2;
+    var page = pagination.page;
+    var perPage = pagination.perPage;
     var totalRecords = activistCodes.count;
 
     var totalPages = Math.ceil(totalRecords / perPage);
@@ -100,7 +100,7 @@ function getAll(req, res) {
 
   var credentials = getCredentials(req);
 
-  ngpvanAPIClient.getActivistCodes(vanEndpoint,
+  ngpvanAPIClient.getActivistCodes(vanEndpoint, pagination,
     credentials.apiKey, credentials.dbMode,
     unauthorized(res), badRequest(res), success);
 }
