@@ -11,7 +11,7 @@
     "start": "node app",
     "watch": "supervisor -w app.js,middleware/,lib/,routes/,config.js -- app.js",
     "test": "mocha test",
-    "coverage": "istanbul cover _mocha test --recursive -- -u exports -R spec && open coverage/lcov-report/PROJECT_NAME/index.html"
+    "coverage": "istanbul cover _mocha test --recursive -- -u exports -R spec && open coverage/lcov-report/index.html"
   },
   "repository": {
     "type": "git",

@@ -7,27 +7,27 @@ var should = require('should'),
 
 var root = config.get('apiEndpoint');
 var tagsEndpoint = 'api/v1/tags';
+var app;
+var getTagResponseHandler, getTagsResponseHandler;
+var ac;
+beforeEach(function() {
+  getTagResponseHandler = new testService.VanResponseHandlerMock();
+  getTagsResponseHandler = new testService.VanResponseHandlerMock();
+
+  ac = {activistCodeId: 1, name: 'Test AC', description: 'A Test Activist Code'}
+  getTagResponseHandler.successData = ac;
+  var clientMock = {
+    '@global': true,
+    getActivistCode: getTagResponseHandler.handle.bind(getTagResponseHandler)
+  };
+
+  var requestMock = function(){};
+  requestMock['@global'] = true;
+  var mocks = {'../lib/ngpvanapi-client': clientMock, 'request': requestMock};
+  app = proxyquire('../app.js', mocks);
+});
 
 describe('/api/v1/tags', function() {
-  var app;
-  var getTagResponseHandler, getTagsResponseHandler;
-  var ac;
-  beforeEach(function() {
-    getTagResponseHandler = new testService.VanResponseHandlerMock();
-    getTagsResponseHandler = new testService.VanResponseHandlerMock();
-
-    ac = {activistCodeId: 1, name: 'Test AC', description: 'A Test Activist Code'}
-    getTagResponseHandler.successData = ac;
-    var clientMock = {
-      '@global': true,
-      getActivistCode: getTagResponseHandler.handle.bind(getTagResponseHandler)
-    };
-
-    var requestMock = function(){};
-    requestMock['@global'] = true;
-    var mocks = {'../lib/ngpvanapi-client': clientMock, 'request': requestMock};
-    app = proxyquire('../app.js', mocks);
-  });
 
   describe('GET tags/tagId', function() {
     it('returns a translated tag from VAN for valid tag ID', function(done) {
@@ -72,6 +72,10 @@ describe('/api/v1/tags', function() {
         .auth('api_test', 'guid-goes-here|0')
         .expect(404, done);
     });
+
+  });
+
+  describe('/api/v1/tags', function() {
 
   });
 });
