@@ -1,3 +1,5 @@
+/*global describe, it */
+
 var osdi = require('../lib/osdi');
 var root = require('../config').get('apiEndpoint');
 
@@ -20,7 +22,7 @@ describe('osdi', function() {
     var path = 'tags';
     var createItem = function() {
       return osdi.createPaginatedItem(page, perPage, pages, total, path);
-    }
+    };
 
     it('creates object with required properties', function() {
       page = 1;
@@ -39,7 +41,7 @@ describe('osdi', function() {
       var item = createItem();
 
       var expectedPath = 'tags?page=' + (page + 1) + '&per_page=' + perPage;
-      item._links['next'].href.should.equal(root + expectedPath)
+      item._links.next.href.should.equal(root + expectedPath);
     });
 
     it('adds a previous link when there are previous pages', function() {
@@ -48,7 +50,7 @@ describe('osdi', function() {
       var item = createItem();
 
       var expectedPath = 'tags?page=' + (page - 1) + '&per_page=' + perPage;
-      item._links['previous'].href.should.equal(root + expectedPath)
+      item._links.previous.href.should.equal(root + expectedPath);
     });
 
     it('adds next and previous links when on a middle page', function() {
@@ -56,10 +58,10 @@ describe('osdi', function() {
 
       var item = createItem();
 
-      var expectedPreviousPath = 'tags?page=' + (page - 1) + '&per_page=' + perPage;
-      var expectedNextPath = 'tags?page=' + (page + 1) + '&per_page=' + perPage;
-      item._links['previous'].href.should.equal(root + expectedPreviousPath)
-      item._links['next'].href.should.equal(root + expectedNextPath)
+      var previousPath = 'tags?page=' + (page - 1) + '&per_page=' + perPage;
+      var nextPath = 'tags?page=' + (page + 1) + '&per_page=' + perPage;
+      item._links.previous.href.should.equal(root + previousPath);
+      item._links.next.href.should.equal(root + nextPath);
     });
   });
 
@@ -69,7 +71,7 @@ describe('osdi', function() {
       var items = [1, 4, 9];
       var formatter = Math.sqrt;
 
-      var result = osdi.addEmbeddedItems(item, items, formatter);
+      osdi.addEmbeddedItems(item, items, formatter);
 
       var expected = items.map(formatter);
 
@@ -97,7 +99,7 @@ describe('osdi', function() {
 
       osdi.addLink(item, name, value);
 
-      item._links['existing'].href.should.equal('localhost');
+      item._links.existing.href.should.equal('localhost');
       item._links[name].href.should.equal(root + value);
     });
   });
@@ -154,6 +156,6 @@ describe('osdi', function() {
       var pagination = osdi.getPaginationOptions({});
 
       pagination.should.eql({});
-    })
+    });
   });
 });

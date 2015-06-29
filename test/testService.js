@@ -20,8 +20,8 @@ function createActivistCodes(count) {
   for (var i = 0; i < count; i++) {
     var ac = {
       activistCodeId: i,
-      name: "AC " + i,
-      description: "Activist Code " + i
+      name: 'AC ' + i,
+      description: 'Activist Code ' + i
     };
     acs.push(ac);
   }

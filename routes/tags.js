@@ -5,13 +5,12 @@ var contentType = require('../middleware/contentType'),
     ngpvanAPIClient = require('../lib/ngpvanapi-client'),
     osdi = require('../lib/osdi');
 
-var root = config.get('apiEndpoint');
 var vanEndpoint = config.get('vanEndpoint');
 
 var unauthorized = function(res) {
   return function() {
     return res.status(401).end();
-  }
+  };
 };
 
 function badRequest(res) {
@@ -39,8 +38,8 @@ function badRequest(res) {
     };
 
     return res.status(response_code).send(answer);
-  }
-};
+  };
+}
 
 function createTagFromActivistCode(activistCode) {
     var answer = osdi.createCommonItem(
@@ -95,7 +94,9 @@ function getAll(req, res) {
     var answer = osdi.createPaginatedItem(page, perPage, totalPages,
       totalRecords, 'tags');
 
-    osdi.addEmbeddedItems(answer, activistCodes.items, createTagFromActivistCode);
+    var items = activistCodes.items;
+
+    osdi.addEmbeddedItems(answer, items, createTagFromActivistCode);
     return res.status(200).send(answer);
   };
 

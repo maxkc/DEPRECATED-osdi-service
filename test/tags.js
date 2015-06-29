@@ -1,5 +1,7 @@
-var should = require('should'),
-    supertest = require('supertest'),
+/*global describe, it, beforeEach */
+
+require('should');
+var supertest = require('supertest'),
     proxyquire = require('proxyquire'),
     sinon = require('sinon'),
     config = require('../config.js'),
@@ -13,7 +15,7 @@ function validateTag(ac, tag) {
   tag.identifiers[0].should.equal('VAN:' + ac.activistCodeId);
   tag.name.should.equal(ac.name);
   tag.description.should.equal(ac.description);
-  tag._links.self.href.should.equal(selfLink)
+  tag._links.self.href.should.equal(selfLink);
 }
 
 describe('/api/v1/tags', function() {
@@ -102,7 +104,7 @@ describe('/api/v1/tags', function() {
             var tag = body._embedded[i];
             validateTag(ac, tag);
           }
-          done()
+          done();
         });
     });
 
@@ -111,12 +113,12 @@ describe('/api/v1/tags', function() {
       var pagination = {
         page: 3,
         perPage: 5
-      }
+      };
       supertest(app)
         .get('/' + tagsEndpoint + '?page=3&per_page=5')
         .set('Accept', 'application/hal+json')
         .auth('api_test', 'guid-goes-here|0')
-        .expect(200, function(err, res) {
+        .expect(200, function() {
           clientMock.getActivistCodes.calledWith(
             sinon.match.any,
             sinon.match(pagination)
