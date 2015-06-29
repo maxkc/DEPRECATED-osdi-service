@@ -9,8 +9,9 @@
   },
   "scripts": {
     "start": "node app",
+    "watch": "supervisor -w app.js,middleware/,lib/,routes/,config.js -- app.js",
     "test": "mocha test",
-    "coverage": "istanbul cover _mocha test --recursive -- -u exports -R spec && open coverage/lcov-report/PROJECT_NAME/index.html"
+    "coverage": "istanbul cover _mocha test --recursive -- -u exports -R spec && open coverage/lcov-report/index.html"
   },
   "repository": {
     "type": "git",
@@ -24,11 +25,13 @@
   "readmeFilename": "README.md",
   "devDependencies": {
     "istanbul": "^0.3.2",
-    "mocha": "^1.21.4",
     "jshint": "~2.5.5",
+    "mocha": "^1.21.4",
+    "proxyquire": "^1.5.0",
     "should": "^5.2.0",
+    "sinon": "^1.15.3",
     "supertest": "^0.15.0",
-    "sinon": "^1.14.1"
+    "supervisor": "^0.6.0"
   },
   "dependencies": {
     "basic-auth": "^1.0.1",

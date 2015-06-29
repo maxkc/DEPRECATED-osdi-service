@@ -2,23 +2,19 @@
 var contentType = require('../middleware/contentType'),
     config = require('../config'),
     auth = require('basic-auth'),
-    ngpvanAPIClient = require('../lib/ngpvanapi-client');
+    ngpvanAPIClient = require('../lib/ngpvanapi-client'),
+    osdi = require('../lib/osdi-response-helper');
 
-function getOne(req, res) {
-  var id = 0;
-  var root = config.get('apiEndpoint');
-  var vanEndpoint = config.get('vanEndpoint');
+var vanEndpoint = config.get('vanEndpoint');
 
-
-  if (req && req.params && req.params.id) {
-    id = parseInt(req.params.id);
-  }
-
-  var unauthorized = function() {
+var unauthorized = function(res) {
+  return function() {
     return res.status(401).end();
   };
+};
 
-  var badRequest = function(error) {
+function badRequest(res) {
+  return function(error) {
     var response_code = 500;
     if (!error) {
       response_code = 400;
@@ -43,36 +39,72 @@ function getOne(req, res) {
 
     return res.status(response_code).send(answer);
   };
+}
+
+function translateActivistCodeToTag(activistCode) {
+    var answer = osdi.createCommonItem(
+      activistCode.name,
+      activistCode.description);
+
+    osdi.addIdentifier(answer, 'VAN:' + activistCode.activistCodeId);
+    osdi.addSelfLink(answer, 'tags', activistCode.activistCodeId);
+    return answer;
+}
+
+function getOne(req, res) {
+  var id = 0;
+
+  if (req && req.params && req.params.id) {
+    id = parseInt(req.params.id);
+  }
 
   var success = function(activistCode) {
-    if (!activistCode || !activistCode.activistCodeId || 
-      parseInt(activistCode.activistCodeId) !== id) {
+    if (!activistCode ||
+        typeof activistCode.activistCodeId === 'undefined' ||
+        parseInt(activistCode.activistCodeId) !== id) {
 
       return res.status(404).end();
     }
 
-    var answer = {
-      'identifiers': [
-        'VAN:' + activistCode.activistCodeId,
-      ],
-      'origin_system': 'VAN',
-      'name': activistCode.name,
-      'description': activistCode.description,
-      '_links': {
-        'self': {
-          'href': root + 'tags/' + id
-        },
-      }
-    };
+    var answer = translateActivistCodeToTag(activistCode);
 
     return res.status(200).send(answer);
   };
 
   var credentials = getCredentials(req);
 
-  ngpvanAPIClient.getActivistCode(vanEndpoint, 
+  ngpvanAPIClient.getActivistCode(vanEndpoint,
     credentials.apiKey, credentials.dbMode, id,
-    unauthorized, badRequest, success);
+    unauthorized(res), badRequest(res), success);
+}
+
+function getAll(req, res) {
+  var pagination = osdi.getPaginationOptions(req);
+
+  var success = function(activistCodes) {
+    if (!(activistCodes && activistCodes.items)) {
+      return res.status(404).end();
+    }
+
+    var page = pagination.page;
+    var perPage = pagination.perPage;
+    var totalRecords = activistCodes.count;
+
+    var totalPages = Math.ceil(totalRecords / perPage);
+    var answer = osdi.createPaginatedItem(page, perPage, totalPages,
+      totalRecords, 'tags');
+
+    var items = activistCodes.items;
+
+    osdi.addEmbeddedItems(answer, items, translateActivistCodeToTag);
+    return res.status(200).send(answer);
+  };
+
+  var credentials = getCredentials(req);
+
+  ngpvanAPIClient.getActivistCodes(vanEndpoint, pagination,
+    credentials.apiKey, credentials.dbMode,
+    unauthorized(res), badRequest(res), success);
 }
 
 function getCredentials(req) {
@@ -88,7 +120,6 @@ function getCredentials(req) {
 }
 
 module.exports = function (app) {
+  app.get('/api/v1/tags', contentType, getAll);
   app.get('/api/v1/tags/:id', contentType, getOne);
 };
-
-
