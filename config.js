@@ -6,7 +6,8 @@ var cfg = {
   port : process.env.PORT || 8000,
 
   apiEndpoint: 'https://ngpvan-osdi-service.herokuapp.com/api/v1/',
-  vanEndpoint: 'https://api.securevan.com/v4/'
+  vanEndpoint: 'https://api.securevan.com/v4/',
+  defaultVanPageSize: 50
 
 };
 

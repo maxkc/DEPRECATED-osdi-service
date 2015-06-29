@@ -1,6 +1,6 @@
 /*global describe, it */
 
-var osdi = require('../lib/osdi');
+var osdi = require('../lib/osdi-response-helper');
 var root = require('../config').get('apiEndpoint');
 
 describe('osdi', function() {
@@ -23,6 +23,13 @@ describe('osdi', function() {
     var createItem = function() {
       return osdi.createPaginatedItem(page, perPage, pages, total, path);
     };
+
+    it('throws an error if page < 0', function() {
+      page = -1;
+
+      var act = function() { createItem(); };
+      act.should.throwError();
+    })
 
     it('creates object with required properties', function() {
       page = 1;
@@ -104,6 +111,33 @@ describe('osdi', function() {
     });
   });
 
+  describe('#addSelfLink', function() {
+    it('adds a self link to an item', function() {
+      var item = {};
+      var type = 'items';
+      var id = 123;
+
+      osdi.addSelfLink(item, type, id);
+
+      item._links.self.href.should.equal(root + type + '/' + id);
+    });
+
+    it('preserves existing links', function() {
+      var item = {
+        _links: {
+          'existing': { href: 'localhost' }
+        }
+      };
+      var type = 'items';
+      var id = 123;
+
+      osdi.addSelfLink(item, type, id);
+
+      item._links.existing.href.should.equal('localhost');
+      item._links.self.href.should.equal(root + type + '/' + id);
+    });
+  });
+
   describe('#addIdentifier', function() {
     it('adds an identifier to an item', function() {
       var item = {};
@@ -156,6 +190,18 @@ describe('osdi', function() {
       var pagination = osdi.getPaginationOptions({});
 
       pagination.should.eql({});
+    });
+
+    it('returns perPage 50 if page specified without perPage', function() {
+      var req = {
+        query: {
+          page: '1'
+        }
+      };
+
+      var pagination = osdi.getPaginationOptions(req);
+
+      pagination.perPage.should.equal(50);
     });
   });
 });

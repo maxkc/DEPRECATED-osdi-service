@@ -3,7 +3,7 @@ var contentType = require('../middleware/contentType'),
     config = require('../config'),
     auth = require('basic-auth'),
     ngpvanAPIClient = require('../lib/ngpvanapi-client'),
-    osdi = require('../lib/osdi');
+    osdi = require('../lib/osdi-response-helper');
 
 var vanEndpoint = config.get('vanEndpoint');
 
@@ -41,13 +41,13 @@ function badRequest(res) {
   };
 }
 
-function createTagFromActivistCode(activistCode) {
+function translateActivistCodeToTag(activistCode) {
     var answer = osdi.createCommonItem(
       activistCode.name,
       activistCode.description);
 
     osdi.addIdentifier(answer, 'VAN:' + activistCode.activistCodeId);
-    osdi.addLink(answer, 'self', 'tags/' + activistCode.activistCodeId);
+    osdi.addSelfLink(answer, 'tags', activistCode.activistCodeId);
     return answer;
 }
 
@@ -66,7 +66,7 @@ function getOne(req, res) {
       return res.status(404).end();
     }
 
-    var answer = createTagFromActivistCode(activistCode);
+    var answer = translateActivistCodeToTag(activistCode);
 
     return res.status(200).send(answer);
   };
@@ -96,7 +96,7 @@ function getAll(req, res) {
 
     var items = activistCodes.items;
 
-    osdi.addEmbeddedItems(answer, items, createTagFromActivistCode);
+    osdi.addEmbeddedItems(answer, items, translateActivistCodeToTag);
     return res.status(200).send(answer);
   };
 

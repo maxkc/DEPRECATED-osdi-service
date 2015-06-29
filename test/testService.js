@@ -5,14 +5,16 @@ VanResponseHandlerMock.prototype.handle =
       unauthorized, badRequest, success) {
 
     if (this.forceSuccess) {
-      success(this.successData);
-    } else if (this.forceUnauthorized) {
-      unauthorized({});
-    } else if (this.forceNotFound) {
-      success({});
-    } else {
-      badRequest({});
+      return success(this.successData);
     }
+    if (this.forceUnauthorized) {
+      return unauthorized({});
+    }
+    if (this.forceNotFound) {
+      return success({});
+    }
+
+    badRequest({});
   };
 
 function createActivistCodes(count) {
