@@ -29,7 +29,7 @@ describe('osdi', function() {
 
       var act = function() { createItem(); };
       act.should.throwError();
-    })
+    });
 
     it('creates object with required properties', function() {
       page = 1;
