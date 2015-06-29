@@ -50,7 +50,7 @@ function translateSurveyQuestionToQuestion(surveyQuestion) {
     answer.question_type = 'SingleChoice';
     osdi.addIdentifier(answer, 'VAN:' + surveyQuestion.surveyQuestionId);
     osdi.addSelfLink(answer, 'questions', surveyQuestion.surveyQuestionId);
-    console.log(surveyQuestion.responses)
+
     answer.responses = (surveyQuestion.responses || []).map(function(response) {
       return {
         key: response.surveyResponseId,
@@ -95,7 +95,7 @@ function getAll(req, res) {
     if (!(surveyQuestions && surveyQuestions.items)) {
       return res.status(404).end();
     }
-    console.log(surveyQuestions)
+
     var page = pagination.page;
     var perPage = pagination.perPage;
     var totalRecords = surveyQuestions.count;
