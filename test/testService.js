@@ -15,6 +15,20 @@ VanResponseHandlerMock.prototype.handle =
     }
   };
 
+function createActivistCodes(count) {
+  var acs = [];
+  for (var i = 0; i < count; i++) {
+    var ac = {
+      activistCodeId: i,
+      name: "AC " + i,
+      description: "Activist Code " + i
+    };
+    acs.push(ac);
+  }
+  return acs;
+}
+
 module.exports = {
-  VanResponseHandlerMock: VanResponseHandlerMock
+  VanResponseHandlerMock: VanResponseHandlerMock,
+  createActivistCodes: createActivistCodes
 };

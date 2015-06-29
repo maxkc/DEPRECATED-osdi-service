@@ -60,8 +60,9 @@ function getOne(req, res) {
   }
 
   var success = function(activistCode) {
-    if (!activistCode || !activistCode.activistCodeId ||
-      parseInt(activistCode.activistCodeId) !== id) {
+    if (!activistCode ||
+        typeof activistCode.activistCodeId === 'undefined' ||
+        parseInt(activistCode.activistCodeId) !== id) {
 
       return res.status(404).end();
     }
