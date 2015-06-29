@@ -10,7 +10,7 @@ describe('notSupported', function() {
 
   it('should not support any resources', function(done) {
     supertest(app).
-      get('/api/v1/questions').
+      get('/api/v1/items').
       expect(500, function(err, res) {
         should.equal(res.body.request_type, 'atomic');
         should.equal(res.body.response_code, 500);
