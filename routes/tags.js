@@ -1,53 +1,18 @@
 
 var contentType = require('../middleware/contentType'),
     config = require('../config'),
-    auth = require('basic-auth'),
     ngpvanAPIClient = require('../lib/ngpvanapi-client'),
-    osdi = require('../lib/osdi-response-helper');
+    osdi = require('../lib/osdi');
 
 var vanEndpoint = config.get('vanEndpoint');
 
-var unauthorized = function(res) {
-  return function() {
-    return res.status(401).end();
-  };
-};
-
-function badRequest(res) {
-  return function(error) {
-    var response_code = 500;
-    if (!error) {
-      response_code = 400;
-    }
-
-    var answer = {
-      'request_type': 'atomic',
-      'response_code': response_code,
-      'resource_status': [
-        {
-          'resource': 'osd:tags',
-          'response_code': response_code,
-          'errors': [
-            {
-              'code': 'UNKNOWN',
-              'description': 'Translating VAN errors is not yet supported.'
-            }
-          ]
-        }
-      ]
-    };
-
-    return res.status(response_code).send(answer);
-  };
-}
-
 function translateActivistCodeToTag(activistCode) {
-    var answer = osdi.createCommonItem(
+    var answer = osdi.response.createCommonItem(
       activistCode.name,
       activistCode.description);
 
-    osdi.addIdentifier(answer, 'VAN:' + activistCode.activistCodeId);
-    osdi.addSelfLink(answer, 'tags', activistCode.activistCodeId);
+    osdi.response.addIdentifier(answer, 'VAN:' + activistCode.activistCodeId);
+    osdi.response.addSelfLink(answer, 'tags', activistCode.activistCodeId);
     return answer;
 }
 
@@ -71,15 +36,15 @@ function getOne(req, res) {
     return res.status(200).send(answer);
   };
 
-  var credentials = getCredentials(req);
+  var credentials = osdi.request.getCredentials(req);
 
   ngpvanAPIClient.activistCodes.getOne(vanEndpoint,
     credentials.apiKey, credentials.dbMode, id,
-    unauthorized(res), badRequest(res), success);
+    osdi.response.unauthorized(res), osdi.response.badRequest(res), success);
 }
 
 function getAll(req, res) {
-  var pagination = osdi.getPaginationOptions(req);
+  var pagination = osdi.response.getPaginationOptions(req);
 
   var success = function(activistCodes) {
     if (!(activistCodes && activistCodes.items)) {
@@ -91,32 +56,20 @@ function getAll(req, res) {
     var totalRecords = activistCodes.count;
 
     var totalPages = Math.ceil(totalRecords / perPage);
-    var answer = osdi.createPaginatedItem(page, perPage, totalPages,
+    var answer = osdi.response.createPaginatedItem(page, perPage, totalPages,
       totalRecords, 'tags');
 
     var items = activistCodes.items;
 
-    osdi.addEmbeddedItems(answer, items, translateActivistCodeToTag);
+    osdi.response.addEmbeddedItems(answer, items, translateActivistCodeToTag);
     return res.status(200).send(answer);
   };
 
-  var credentials = getCredentials(req);
+  var credentials = osdi.request.getCredentials(req);
 
   ngpvanAPIClient.activistCodes.getAll(vanEndpoint, pagination,
     credentials.apiKey, credentials.dbMode,
-    unauthorized(res), badRequest(res), success);
-}
-
-function getCredentials(req) {
-  var user = auth(req);
-  var pass = user.pass;
-
-  if (typeof pass !== 'string') {
-    return {};
-  }
-
-  var parts = pass.split('|');
-  return { apiKey: parts[0], dbMode: parts[1] };
+    osdi.response.unauthorized(res), osdi.response.badRequest(res), success);
 }
 
 module.exports = function (app) {

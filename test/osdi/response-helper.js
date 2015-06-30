@@ -1,7 +1,7 @@
 /*global describe, it */
 
-var osdi = require('../lib/osdi-response-helper');
-var root = require('../config').get('apiEndpoint');
+var osdi = require('../../lib/osdi').response;
+var root = require('../../config').get('apiEndpoint');
 
 describe('osdi', function() {
   describe('#createCommonItem', function() {
