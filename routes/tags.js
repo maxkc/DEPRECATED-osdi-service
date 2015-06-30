@@ -73,7 +73,7 @@ function getOne(req, res) {
 
   var credentials = getCredentials(req);
 
-  ngpvanAPIClient.getActivistCode(vanEndpoint,
+  ngpvanAPIClient.activistCodes.getOne(vanEndpoint,
     credentials.apiKey, credentials.dbMode, id,
     unauthorized(res), badRequest(res), success);
 }
@@ -102,7 +102,7 @@ function getAll(req, res) {
 
   var credentials = getCredentials(req);
 
-  ngpvanAPIClient.getActivistCodes(vanEndpoint, pagination,
+  ngpvanAPIClient.activistCodes.getAll(vanEndpoint, pagination,
     credentials.apiKey, credentials.dbMode,
     unauthorized(res), badRequest(res), success);
 }

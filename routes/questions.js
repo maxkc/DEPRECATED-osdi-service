@@ -83,7 +83,7 @@ function getOne(req, res) {
 
   var credentials = getCredentials(req);
 
-  ngpvanAPIClient.getSurveyQuestion(vanEndpoint,
+  ngpvanAPIClient.surveyQuestions.getOne(vanEndpoint,
     credentials.apiKey, credentials.dbMode, id,
     unauthorized(res), badRequest(res), success);
 }
@@ -112,7 +112,7 @@ function getAll(req, res) {
 
   var credentials = getCredentials(req);
 
-  ngpvanAPIClient.getSurveyQuestions(vanEndpoint, pagination,
+  ngpvanAPIClient.surveyQuestions.getAll(vanEndpoint, pagination,
     credentials.apiKey, credentials.dbMode,
     unauthorized(res), badRequest(res), success);
 }

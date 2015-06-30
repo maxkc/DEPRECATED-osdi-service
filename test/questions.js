@@ -40,14 +40,16 @@ describe('/api/v1/questions', function() {
 
     clientMock = {
       '@global': true,
-      getSurveyQuestion:
-       getQuestionResponseHandler.handle.bind(getQuestionResponseHandler),
-      getSurveyQuestions:
-       getQuestionsResponseHandler.handle.bind(getQuestionsResponseHandler),
+      surveyQuestions: {
+        getOne:
+         getQuestionResponseHandler.handle.bind(getQuestionResponseHandler),
+        getAll:
+         getQuestionsResponseHandler.handle.bind(getQuestionsResponseHandler),
+      }
     };
 
-    sinon.spy(clientMock, 'getSurveyQuestion');
-    sinon.spy(clientMock, 'getSurveyQuestions');
+    sinon.spy(clientMock.surveyQuestions, 'getOne');
+    sinon.spy(clientMock.surveyQuestions, 'getAll');
 
     var mocks = {'../lib/ngpvanapi-client': clientMock};
     app = proxyquire('../app.js', mocks);
@@ -123,7 +125,7 @@ describe('/api/v1/questions', function() {
         .set('Accept', 'application/hal+json')
         .auth('api_test', 'guid-goes-here|0')
         .expect(200, function() {
-          clientMock.getSurveyQuestions.calledWith(
+          clientMock.surveyQuestions.getAll.calledWith(
             sinon.match.any,
             sinon.match(pagination)
           ).should.equal(true);

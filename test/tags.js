@@ -36,14 +36,14 @@ describe('/api/v1/tags', function() {
 
     clientMock = {
       '@global': true,
-      getActivistCode:
-       getTagResponseHandler.handle.bind(getTagResponseHandler),
-      getActivistCodes:
-       getTagsResponseHandler.handle.bind(getTagsResponseHandler),
+      activistCodes: {
+        getOne: getTagResponseHandler.handle.bind(getTagResponseHandler),
+        getAll: getTagsResponseHandler.handle.bind(getTagsResponseHandler),
+      }
     };
 
-    sinon.spy(clientMock, 'getActivistCode');
-    sinon.spy(clientMock, 'getActivistCodes');
+    sinon.spy(clientMock.activistCodes, 'getOne');
+    sinon.spy(clientMock.activistCodes, 'getAll');
 
     var mocks = {'../lib/ngpvanapi-client': clientMock};
     app = proxyquire('../app.js', mocks);
@@ -119,7 +119,7 @@ describe('/api/v1/tags', function() {
         .set('Accept', 'application/hal+json')
         .auth('api_test', 'guid-goes-here|0')
         .expect(200, function() {
-          clientMock.getActivistCodes.calledWith(
+          clientMock.activistCodes.getAll.calledWith(
             sinon.match.any,
             sinon.match(pagination)
           ).should.equal(true);
