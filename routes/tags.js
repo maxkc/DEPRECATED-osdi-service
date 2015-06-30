@@ -1,24 +1,16 @@
-
 var contentType = require('../middleware/contentType'),
-    config = require('../config'),
     ngpvanAPIClient = require('../lib/ngpvanapi-client'),
     osdi = require('../lib/osdi'),
     vanRequest = require('../lib/van-request-helper');
 
-var vanEndpoint = config.get('vanEndpoint');
-
-function translateActivistCodeToTag(activistCode) {
+function translate(ac) {
     var answer = osdi.response.createCommonItem(
-      activistCode.name,
-      activistCode.description);
+      ac.name,
+      ac.description);
 
-  osdi.response.addIdentifier(answer, 'VAN:' + activistCode.activistCodeId);
-  osdi.response.addSelfLink(answer, 'tags', activistCode.activistCodeId);
+  osdi.response.addIdentifier(answer, 'VAN:' + ac.activistCodeId);
+  osdi.response.addSelfLink(answer, 'tags', ac.activistCodeId);
   return answer;
-}
-
-function getOne(req, res) {
-  vanRequest.getOne(req, res, 'tags', validate, translateActivistCodeToTag, ngpvanAPIClient.activistCodes);
 }
 
 function validate(activistCode, id) {
@@ -27,8 +19,14 @@ function validate(activistCode, id) {
          parseInt(activistCode.activistCodeId) === id;
 }
 
+function getOne(req, res) {
+  vanRequest.getOne(req, res, 'tags', validate,
+    translate, ngpvanAPIClient.activistCodes);
+}
+
 function getAll(req, res) {
-  vanRequest.getAll(req, res, 'tags', translateActivistCodeToTag, ngpvanAPIClient.activistCodes);
+  vanRequest.getAll(req, res, 'tags', translate,
+    ngpvanAPIClient.activistCodes);
 }
 
 module.exports = function (app) {

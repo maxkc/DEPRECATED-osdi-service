@@ -1,9 +1,9 @@
-/*global describe, it */
+/*global describe, it, beforeEach */
 
 var osdi = require('../../lib/osdi').response;
 var root = require('../../config').get('apiEndpoint');
 var sinon = require('sinon');
-var should = require('should');
+require('should');
 
 describe('osdi.response-helper', function() {
   describe('#createCommonItem', function() {

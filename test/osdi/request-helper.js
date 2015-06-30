@@ -1,7 +1,7 @@
 /*global describe, it */
 
 var osdi = require('../../lib/osdi').request;
-var should = require('should');
+require('should');
 
 describe('osdi.request-helper', function() {
   describe('#getCredentials', function() {

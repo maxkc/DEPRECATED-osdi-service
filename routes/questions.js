@@ -1,23 +1,19 @@
-
 var contentType = require('../middleware/contentType'),
-    config = require('../config'),
     ngpvanAPIClient = require('../lib/ngpvanapi-client'),
     osdi = require('../lib/osdi'),
     vanRequest = require('../lib/van-request-helper');
 
-var vanEndpoint = config.get('vanEndpoint');
-
-function translateSurveyQuestionToQuestion(surveyQuestion) {
+function translate(sq) {
   var answer = osdi.response.createCommonItem(
-    surveyQuestion.mediumName,
-    surveyQuestion.scriptQuestion);
-  answer.title = surveyQuestion.name;
+    sq.mediumName,
+    sq.scriptQuestion);
+  answer.title = sq.name;
   answer.summary = answer.description;
   answer.question_type = 'SingleChoice';
-  osdi.response.addIdentifier(answer, 'VAN:' + surveyQuestion.surveyQuestionId);
-  osdi.response.addSelfLink(answer, 'questions', surveyQuestion.surveyQuestionId);
+  osdi.response.addIdentifier(answer, 'VAN:' + sq.surveyQuestionId);
+  osdi.response.addSelfLink(answer, 'questions', sq.surveyQuestionId);
 
-  answer.responses = (surveyQuestion.responses || []).map(function(response) {
+  answer.responses = (sq.responses || []).map(function(response) {
     return {
       key: response.surveyResponseId,
       name: response.mediumName,
@@ -34,11 +30,13 @@ function validate(surveyQuestion, id) {
 }
 
 function getOne(req, res) {
-  vanRequest.getOne(req, res, 'questions', validate, translateSurveyQuestionToQuestion, ngpvanAPIClient.surveyQuestions);
+  vanRequest.getOne(req, res, 'questions', validate,
+    translate, ngpvanAPIClient.surveyQuestions);
 }
 
 function getAll(req, res) {
-  vanRequest.getAll(req, res, 'questions', translateSurveyQuestionToQuestion, ngpvanAPIClient.surveyQuestions);
+  vanRequest.getAll(req, res, 'questions', translate,
+    ngpvanAPIClient.surveyQuestions);
 }
 
 
