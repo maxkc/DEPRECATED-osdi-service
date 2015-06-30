@@ -18,6 +18,10 @@ function apiRoot(req, res) {
       'osdi:tags': {
         'href': root + 'tags',
         'title': 'The collection of tags in the system'
+      },
+      'osdi:questions': {
+        'href': root + 'questions',
+        'title': 'The collection of questions in the system'
       }
     }
   };

@@ -27,9 +27,15 @@ describe('AEP', function() {
           'NGP VAN OSDI Service Entry Point');
 
         var tags = body._links['osdi:tags'];
-        should.equal(tags.href, 
+        should.equal(tags.href,
           'https://ngpvan-osdi-service.herokuapp.com/api/v1/tags');
         should.equal(tags.title, 'The collection of tags in the system');
+
+        var questions = body._links['osdi:questions'];
+        should.equal(questions.href,
+          'https://ngpvan-osdi-service.herokuapp.com/api/v1/questions');
+        should.equal(questions.title, 'The collection of questions in the system');
+
         done();
       });
   });
