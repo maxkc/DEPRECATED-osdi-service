@@ -55,63 +55,61 @@ describe('/api/v1/questions', function() {
     app = proxyquire('../app.js', mocks);
   });
 
+  function getQuestion() {
+    return supertest(app)
+      .get('/' + questionsEndpoint + '/' + sq.surveyQuestionId)
+      .set('Accept', 'application/hal+json')
+      .auth('api_test', 'guid-goes-here|0');
+  }
+
   describe('GET questions/questionId', function() {
     it('returns a translated question from VAN for valid question ID', function(done) {
       getQuestionResponseHandler.forceSuccess = true;
-      supertest(app)
-        .get('/' + questionsEndpoint + '/' + sq.surveyQuestionId)
-        .set('Accept', 'application/hal+json')
-        .auth('api_test', 'guid-goes-here|0')
-        .expect(200, function(err, res) {
-          var body = JSON.parse(res.text);
-          validateQuestion(sq, body);
-          done();
-        });
+      getQuestion().expect(200, function(err, res) {
+        var body = JSON.parse(res.text);
+        validateQuestion(sq, body);
+        done();
+      });
     });
 
     it('returns 500 when a VAN error occurs', function(done) {
       getQuestionResponseHandler.forceBadRequest = true;
-      supertest(app)
-        .get('/' + questionsEndpoint + '/' + sq.surveyQuestionId)
-        .set('Accept', 'application/hal+json')
-        .auth('api_test', 'guid-goes-here|0')
-        .expect(500, function(err, res) {
-          var body = JSON.parse(res.text);
+      getQuestion().expect(500, function(err, res) {
+        var body = JSON.parse(res.text);
 
-          body.response_code.should.equal(500);
-          body.resource_status[0].errors[0].code.should.equal('UNKNOWN');
+        body.response_code.should.equal(500);
+        body.resource_status[0].errors[0].code.should.equal('UNKNOWN');
 
-          done();
-        });
+        done();
+      });
     });
 
     it('returns 404 when SQ not found in VAN', function(done) {
       getQuestionResponseHandler.forceNotFound = true;
-      supertest(app)
-        .get('/' + questionsEndpoint + '/' + sq.surveyQuestionId)
-        .set('Accept', 'application/hal+json')
-        .auth('api_test', 'guid-goes-here|0')
-        .expect(404, done);
+      getQuestion().expect(404, done);
     });
 
   });
 
   describe('GET questions', function() {
-    it('returns translated questions from VAN', function(done) {
-      getQuestionsResponseHandler.forceSuccess = true;
-      supertest(app)
-        .get('/' + questionsEndpoint)
+    function getQuestions(query) {
+      return supertest(app)
+        .get('/' + questionsEndpoint + (query || ''))
         .set('Accept', 'application/hal+json')
         .auth('api_test', 'guid-goes-here|0')
-        .expect(200, function(err, res) {
-          var body = JSON.parse(res.text);
-          for (var i = 0; i < body._embedded.length; i++) {
-            var sq = sqs[i];
-            var question = body._embedded[i];
-            validateQuestion(sq, question);
-          }
-          done();
-        });
+    }
+
+    it('returns translated questions from VAN', function(done) {
+      getQuestionsResponseHandler.forceSuccess = true;
+      getQuestions().expect(200, function(err, res) {
+        var body = JSON.parse(res.text);
+        for (var i = 0; i < body._embedded.length; i++) {
+          var sq = sqs[i];
+          var question = body._embedded[i];
+          validateQuestion(sq, question);
+        }
+        done();
+      });
     });
 
     it('requests paginated questions from VAN', function(done) {
@@ -120,42 +118,30 @@ describe('/api/v1/questions', function() {
         page: 3,
         perPage: 5
       };
-      supertest(app)
-        .get('/' + questionsEndpoint + '?page=3&per_page=5')
-        .set('Accept', 'application/hal+json')
-        .auth('api_test', 'guid-goes-here|0')
-        .expect(200, function() {
-          clientMock.surveyQuestions.getAll.calledWith(
-            sinon.match.any,
-            sinon.match(pagination)
-          ).should.equal(true);
-          done();
-        });
+      getQuestions('?page=3&per_page=5').expect(200, function() {
+        clientMock.surveyQuestions.getAll.calledWith(
+          sinon.match.any,
+          sinon.match(pagination)
+        ).should.equal(true);
+        done();
+      });
     });
 
     it('returns 500 when a VAN error occurs', function(done) {
       getQuestionsResponseHandler.forceBadRequest = true;
-      supertest(app)
-        .get('/' + questionsEndpoint)
-        .set('Accept', 'application/hal+json')
-        .auth('api_test', 'guid-goes-here|0')
-        .expect(500, function(err, res) {
-          var body = JSON.parse(res.text);
+      getQuestions().expect(500, function(err, res) {
+        var body = JSON.parse(res.text);
 
-          body.response_code.should.equal(500);
-          body.resource_status[0].errors[0].code.should.equal('UNKNOWN');
+        body.response_code.should.equal(500);
+        body.resource_status[0].errors[0].code.should.equal('UNKNOWN');
 
-          done();
-        });
+        done();
+      });
     });
 
     it('returns 404 when SQs not found in VAN', function(done) {
       getQuestionsResponseHandler.forceNotFound = true;
-      supertest(app)
-        .get('/' + questionsEndpoint)
-        .set('Accept', 'application/hal+json')
-        .auth('api_test', 'guid-goes-here|0')
-        .expect(404, done);
+      getQuestions().expect(404, done);
     });
   });
 });
