@@ -34,7 +34,8 @@ describe('AEP', function() {
         var questions = body._links['osdi:questions'];
         should.equal(questions.href,
           'https://ngpvan-osdi-service.herokuapp.com/api/v1/questions');
-        should.equal(questions.title, 'The collection of questions in the system');
+        should.equal(questions.title,
+          'The collection of questions in the system');
 
         done();
       });
