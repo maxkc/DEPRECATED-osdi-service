@@ -3,7 +3,7 @@
 var osdi = require('../../lib/osdi').request;
 var should = require('should');
 
-describe.only('osdi.request-helper', function() {
+describe('osdi.request-helper', function() {
   describe('#getCredentials', function() {
     it('parses apiKey and dbMode', function() {
       var req = {
