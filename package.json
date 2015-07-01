@@ -11,6 +11,7 @@
     "start": "node app",
     "watch": "supervisor -w app.js,middleware/,lib/,routes/,config.js -- app.js",
     "test": "mocha test",
+    "watch-test": "supervisor -n exit -x npm -w app.js,middleware/,lib/,routes/,config.js,test/ -- test",
     "coverage": "istanbul cover _mocha test --recursive -- -u exports -R spec && open coverage/lcov-report/index.html"
   },
   "repository": {
@@ -28,7 +29,7 @@
     "jshint": "~2.5.5",
     "mocha": "^1.21.4",
     "proxyquire": "^1.5.0",
-    "should": "^5.2.0",
+    "should": "^7.0.1",
     "sinon": "^1.15.3",
     "supertest": "^0.15.0",
     "supervisor": "^0.6.0"
@@ -39,7 +40,8 @@
     "cors": "^2.5.3",
     "express": "^4.12.2",
     "express-ie-cors": "^0.9.4",
-    "require-directory": "^2.1.0",
-    "request": "^2.55.0"
+    "lodash": "^3.10.0",
+    "request": "^2.55.0",
+    "require-directory": "^2.1.0"
   }
 }

@@ -1,9 +1,11 @@
-/*global describe, it */
+/*global describe, it, beforeEach */
 
-var osdi = require('../lib/osdi-response-helper');
-var root = require('../config').get('apiEndpoint');
+var osdi = require('../../lib/osdi').response;
+var root = require('../../config').get('apiEndpoint');
+var sinon = require('sinon');
+require('should');
 
-describe('osdi', function() {
+describe('osdi.response-helper', function() {
   describe('#createCommonItem', function() {
     it('creates object with required properties', function() {
       var name = 'Item';
@@ -203,5 +205,70 @@ describe('osdi', function() {
 
       pagination.perPage.should.equal(50);
     });
+  });
+
+  describe('#unauthorized', function() {
+    it('returns a function that sends 401 when called', function() {
+      var res = {
+        status: function() { return res; },
+        end: function() {}
+      };
+
+      sinon.spy(res, 'status');
+      sinon.spy(res, 'end');
+
+      osdi.unauthorized(res)();
+      res.status.calledOnce.should.be.true();
+      res.status.calledWith(401).should.be.true();
+      res.end.calledOnce.should.be.true();
+    });
+  });
+
+  describe('#badRequest', function() {
+    var res;
+    beforeEach(function() {
+      res = {
+        status: function() { return res; },
+        send: function() {}
+      };
+      sinon.spy(res, 'status');
+      sinon.spy(res, 'send');
+    });
+    it('returns a function that sends 400 if called without err', function() {
+      osdi.badRequest(res, 'items')();
+      res.status.calledOnce.should.be.true();
+      res.status.calledWith(400).should.be.true();
+      res.send.calledOnce.should.be.true();
+    });
+
+    it('returns a function that sends 500 if called without err', function() {
+      osdi.badRequest(res, 'items')({});
+      res.status.calledOnce.should.be.true();
+      res.status.calledWith(500).should.be.true();
+      res.send.calledOnce.should.be.true();
+    });
+
+    it('returns a function that sends formatted error', function() {
+      var expected = {
+        'request_type': 'atomic',
+        'response_code': 400,
+        'resource_status': [
+          {
+            'resource': 'osdi:items',
+            'response_code': 400,
+            'errors': [
+              {
+                'code': 'UNKNOWN',
+                'description': 'Translating VAN errors is not yet supported.'
+              }
+            ]
+          }
+        ]
+      };
+      osdi.badRequest(res, 'items')();
+      res.send.calledWith(expected).should.be.true();
+      res.send.calledOnce.should.be.true();
+    });
+
   });
 });
