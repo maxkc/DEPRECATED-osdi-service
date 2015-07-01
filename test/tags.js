@@ -4,7 +4,7 @@ require('should');
 
 var config = require('../config.js'),
     testService = require('./testService.js'),
-    util = require('./common-tests');
+    testGetOsdiResource = require('./testGetOsdiResource');
 
 var root = config.get('apiEndpoint');
 
@@ -18,6 +18,6 @@ function validateTag(ac, tag) {
 }
 
 describe('/api/v1/tags', function() {
-  util.runCommonTests('tag', testService.createActivistCodes,
+  testGetOsdiResource('tag', testService.createActivistCodes,
     'activistCode', validateTag);
 });

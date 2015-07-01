@@ -6,7 +6,7 @@ var supertest = require('supertest'),
     sinon = require('sinon'),
     testService = require('./testService.js');
 
-function runCommonTests(osdiType, itemsFactory, vanType, validate) {
+function testGetOsdiResource(osdiType, itemsFactory, vanType, validate) {
   var itemsEndpoint = 'api/v1/' + osdiType + 's';
   var app;
   var clientMock;
@@ -47,7 +47,7 @@ function runCommonTests(osdiType, itemsFactory, vanType, validate) {
     }
 
     it('returns a translated ' + osdiType +
-       ' from VAN for valid tag ID', function(done) {
+       ' from VAN for valid ' + osdiType + ' ID', function(done) {
       getItemResponseHandler.forceSuccess = true;
       getItem().expect(200, function(err, res) {
         var body = JSON.parse(res.text);
@@ -130,6 +130,4 @@ function runCommonTests(osdiType, itemsFactory, vanType, validate) {
   });
 }
 
-module.exports = {
-  runCommonTests: runCommonTests
-};
+module.exports = testGetOsdiResource;

@@ -254,7 +254,7 @@ describe('osdi.response-helper', function() {
         'response_code': 400,
         'resource_status': [
           {
-            'resource': 'osd:items',
+            'resource': 'osdi:items',
             'response_code': 400,
             'errors': [
               {
