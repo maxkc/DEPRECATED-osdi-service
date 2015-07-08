@@ -10,4 +10,6 @@
 * Questions and Tags endpoints.
 
 
+## 0.2.0
 
+* Person Signup Helper endpoint.
