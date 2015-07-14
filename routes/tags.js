@@ -1,6 +1,7 @@
 var contentType = require('../middleware/contentType'),
-    ngpvanAPIClient = require('../lib/ngpvanapi-client'),
+    ngpvanAPIClient = require('../lib/ngpvan-api-client'),
     osdi = require('../lib/osdi'),
+    osdiVANClientFactory = require('./osdi-van-client-factory'),
     vanRequest = require('../lib/van-request-helper');
 
 function translate(ac) {
@@ -20,11 +21,23 @@ function validate(activistCode, id) {
 }
 
 function getOne(req, res) {
-  vanRequest.getOne(req, res, 'tags', validate,
-    translate, ngpvanAPIClient.activistCodes);
+  var apiToken = osdi.request.getAPIToken(req);
+  var vanClient = osdiVANClientFactory(apiToken);
+  
+  var id = 0;
+  if (req && req.params && req.params.id) {
+    id = req.params.id;
+  }
+  
+  vanClient.activistCodes.getOne(id).
+    spread(function (activistCode) {
+      var tag = translate(activistCode);
+      return res.status(200).send(tag);
+  });
 }
 
 function getAll(req, res) {
+  
   vanRequest.getAll(req, res, 'tags', translate,
     ngpvanAPIClient.activistCodes);
 }
