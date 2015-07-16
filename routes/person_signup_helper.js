@@ -10,8 +10,7 @@ var contentType = require('../middleware/contentType'),
 var vanEndpoint = config.get('vanEndpoint');
 
 function getCredentials(req) {
-  var user = auth(req);
-  var pass = user.pass;
+  var pass=req.get('OSDI-API-Token');
 
   if (typeof pass !== 'string') {
     return {};
@@ -24,6 +23,7 @@ function getCredentials(req) {
 function translate(req) {
   var osdiPerson = {};
   var vanPerson = {};
+
   if (req && req.body && req.body.person) {
     osdiPerson = req.body.person;
   }
