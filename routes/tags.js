@@ -1,45 +1,19 @@
 var contentType = require('../middleware/contentType'),
-    ngpvanAPIClient = require('../lib/ngpvan-api-client'),
     osdi = require('../lib/osdi'),
-    osdiVANClientFactory = require('../lib/osdi-van-client-factory'),
-    vanRequest = require('../lib/van-request-helper'),
-    translateVANResourceToOSDIResponse = require('../lib/translate-van-resource-to-osdi-response');
+    bridge = require('../lib/bridge');
 
 function getAll(req, res) {
-  var vanClient = osdiVANClientFactory(req);
-  var pagination = osdi.request.getPaginationOptions(req);
+  var vanClient = bridge.createClient(req);
+  var vanPaginationParams = bridge.getVANPaginationParams(req);
   
-  var top = null;
-  var skip = null;
-  if (pagination.page && pagination.perPage) {
-    top = pagination.perPage;
-    skip = (pagination.page - 1) * pagination.perPage;
-  }
-  else if (pagination.perPage) {
-    top = pagination.perPage;
-  }  
+  var resourcePromise = vanClient.activistCodes.getMany(null, null, null,
+    vanPaginationParams.top, vanPaginationParams.skip);
   
-  var resourceType = 'tags';
-
-  var manyResourcesTranslator = function (acs) {
-    var totalRecords = acs.count;
-
-    var totalPages = Math.ceil(totalRecords / pagination.perPage);
-    var answer = osdi.response.createPaginatedItem(pagination.page, pagination.perPage, 
-      totalPages, totalRecords, resourceType);
-  
-    var items = acs.items;
-  
-    osdi.response.addEmbeddedItems(answer, items, oneResourceTranslator);
-    return answer;
-  };
-  
-  var resourcePromise = vanClient.activistCodes.getMany(null, null, null, top, skip);
-  translateVANResourceToOSDIResponse(resourcePromise, manyResourcesTranslator, resourceType, res);
+  bridge.sendMultiResourceResponse(resourcePromise, oneResourceTranslator, 'tags', res);
 }
 
 function getOne(req, res) {
-  var vanClient = osdiVANClientFactory(req);
+  var vanClient = bridge.createClient(req);
   
   var id = 0;
   if (req && req.params && req.params.id) {
@@ -47,7 +21,8 @@ function getOne(req, res) {
   }
 
   var resourcePromise = vanClient.activistCodes.getOne(id);
-  translateVANResourceToOSDIResponse(resourcePromise, oneResourceTranslator, 'tags', res);
+  
+  bridge.sendSingleResourceResponse(resourcePromise, oneResourceTranslator, 'tags', res);
 }
 
 function oneResourceTranslator(ac) {
