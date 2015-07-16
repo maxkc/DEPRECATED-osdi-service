@@ -5,8 +5,8 @@ var cfg = {
   // http://nodejs.org/api/process.html#process_process_env
   port : process.env.PORT || 8000,
 
-  apiEndpoint: 'https://ngpvan-osdi-service.herokuapp.com/api/v1/',
-  vanEndpoint: 'https://api.securevan.com/v4/',
+  apiEndpoint: process.env.API_ENDPOINT || 'http://osdi.ngpvan.com/api/v1/',
+  vanEndpoint: process.env.VAN_ENDPOINT || 'https://api.securevan.com/v4/',
   defaultVanPageSize: 50
 
 };

@@ -22,6 +22,10 @@ function apiRoot(req, res) {
       'osdi:questions': {
         'href': root + 'questions',
         'title': 'The collection of questions in the system'
+      },
+      'osdi:people': {
+        'href': root + 'people',
+        'title': 'The collection of people in the system'
       }
     }
   };
