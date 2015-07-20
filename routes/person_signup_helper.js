@@ -80,7 +80,8 @@ function signup(req, res) {
     success);
 }
 
+// Deprecated, to be deleted in a bit
 
 module.exports = function (app) {
-  app.post('/api/v1/people/person_signup_helper', contentType, signup);
+//  app.post('/api/v1/people/person_signup_helper', contentType, signup);
 };
