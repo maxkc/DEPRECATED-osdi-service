@@ -3,17 +3,18 @@ var contentType = require('../middleware/contentType'),
     BPromise = require('bluebird'),
     osdi = require('../lib/osdi'),
     config = require('../config'),
-    auth = require('basic-auth');
+    auth = require('basic-auth'),
+    bridge = require('../lib/bridge'),
+    _ = require('lodash');
 
 var vanEndpoint = config.get('vanEndpoint');
 
 function translateToMatchCandidate(req) {
   var osdiPerson = {};
-  
+
   if (req && req.body && req.body.person) {
     osdiPerson = req.body.person;
   }
-
   var answer = {
     firstName: osdiPerson.given_name,
     middleName: osdiPerson.additional_name,
@@ -32,7 +33,7 @@ function translateToMatchCandidate(req) {
     answer.email.isPreferred = isPreferred;
     answer.email.address_type = 'Personal';
   }
-  
+
   if (osdiPerson.phone_numbers && osdiPerson.phone_numbers[0]) {
     var typeMapping = {
       'Home': 'H',
@@ -40,17 +41,17 @@ function translateToMatchCandidate(req) {
       'Mobile': 'M',
       'Fax': 'F'
     };
-    
+
     answer.phone = {};
     answer.phone.phonueNumber = osdiPerson.phone_numbers[0].number;
     answer.phone.ext = osdiPerson.phone_numbers[0].extension;
     answer.phone.isPreferred =
       osdiPerson.phone_numbers[0].primary ? true : false;
-      
+
     var osdiNumberType = typeMapping[osdiPerson.phone_numbers[0].number_type];
     answer.phone.phoneType  = numberType ? numberType : null;
   }
-  
+
   if (osdiPerson.postal_addresses && osdiPerson.postal_addresses[0]) {
     var osdiAddress = osdiPerson.postal_addresses[0];
     var addressTypeMapping = {
@@ -58,7 +59,7 @@ function translateToMatchCandidate(req) {
       'Work': 'W',
       'Mailing': 'M'
     };
-    
+
     answer.address = {};
     answer.address.addressLine1 = osdiAddress.address_lines[0];
     answer.address.addressLine2 = osdiAddress.address_lines[1];
@@ -67,24 +68,24 @@ function translateToMatchCandidate(req) {
     answer.address.stateOrProvince = osdiAddress.region;
     answer.address.zipOrPostalCode = osdiAddress.postal_code;
     answer.address.countryCode = osdiAddress.country;
-    
+
     var osdiAddressType = addressTypeMapping[osdiAddress.address_type];
     answer.address.address_type = osdiAddressType ? osdiAddressType : null;
     answer.address.isPreferred = osdiAddress.primary ? true : false;
   }
-  
+
   // intentionally ignoring identifiers for now - bit tricky semantically
-  
+
   return answer;
 }
 
 function translateToActivistCodes(req) {
   var answer = [];
-  
+
   if (req && req.body && req.body.add_tags) {
-    answer = _(req.body.add_tags);
+    answer = req.body.add_tags;
   }
-  
+
   return answer;
 }
 
@@ -98,22 +99,21 @@ function signup(req, res) {
   var matchCandidate = translateToMatchCandidate(req);
   var acs = translateToActivistCodes(req);
   var originalMatchResponse = null;
-  
   var personPromise = vanClient.people.findOrCreate(matchCandidate).
     then(function(matchResponse) {
       originalMatchResponse = matchResponse;
-      var vanId = matchRepsonse.vanId;
-      
+      var vanId = matchResponse.vanId;
+
       var promises = _.map(acs, function (activistCodeId) {
         return vanClient.people.applyActivistCode(vanId, activistCodeId);
       });
-      
+
       return BPromise.all(promises);
     }).
     then(function() {
-      return vanClient.people.getOne(originalMatchRsponse.vanId);
+      return vanClient.people.getOne(originalMatchResponse.vanId);
     });
-  
+
   bridge.sendSingleResourceResponse(personPromise, translateToOSDIPerson,
     'people', res);
 }

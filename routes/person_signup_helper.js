@@ -19,7 +19,7 @@ function getCredentials(req) {
 
 function translate(req) {
   var osdiPerson = {};
-  
+
   if (req && req.body && req.body.person) {
     osdiPerson = req.body.person;
   }
@@ -63,10 +63,10 @@ function signup(req, res) {
 
     var email_addresses = [];
     if (vanPerson.email && vanPerson.email.email) {
-      email_addresses.push({ 
+      email_addresses.push({
         address: vanPerson.email.email,
-        primary: vanPerson.email.isPreferred, 
-        address_type: 'Personal' 
+        primary: vanPerson.email.isPreferred,
+        address_type: 'Personal'
       });
     }
     answer.email_addresses = email_addresses;
@@ -76,7 +76,7 @@ function signup(req, res) {
 
   ngpvanAPIClient.people.findOrCreate(vanEndpoint,
     credentials.apiKey, credentials.dbMode, vanPerson,
-    osdi.response.unauthorized(res), osdi.response.badRequest(res), 
+    osdi.response.unauthorized(res), osdi.response.badRequest(res),
     success);
 }
 
