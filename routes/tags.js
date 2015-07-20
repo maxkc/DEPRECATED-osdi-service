@@ -8,8 +8,9 @@ function getAll(req, res) {
   
   var resourcePromise = vanClient.activistCodes.getMany(null, null, null,
     vanPaginationParams.top, vanPaginationParams.skip);
-  
-  bridge.sendMultiResourceResponse(resourcePromise, oneResourceTranslator, 'tags', res);
+
+  bridge.sendMultiResourceResponse(resourcePromise, vanPaginationParams, 
+    oneResourceTranslator, 'tags', res);
 }
 
 function getOne(req, res) {
