@@ -23,7 +23,8 @@ function getOne(req, res) {
 
   var resourcePromise = vanClient.activistCodes.getOne(id);
   
-  bridge.sendSingleResourceResponse(resourcePromise, oneResourceTranslator, 'tags', res);
+  bridge.sendSingleResourceResponse(resourcePromise, oneResourceTranslator,
+    'tags', res);
 }
 
 function oneResourceTranslator(ac) {

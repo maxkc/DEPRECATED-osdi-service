@@ -2,10 +2,7 @@ var contentType = require('../middleware/contentType'),
     ngpvanAPIClient = require('../lib/ngpvanapi-client'),
     osdi = require('../lib/osdi'),
     config = require('../config'),
-    vanRequest = require('../lib/van-request-helper'),
     auth = require('basic-auth');
-
-
 
 var vanEndpoint = config.get('vanEndpoint');
 
@@ -23,7 +20,6 @@ function getCredentials(req) {
 
 function translate(req) {
   var osdiPerson = {};
-  var vanPerson = {};
   if (req && req.body && req.body.person) {
     osdiPerson = req.body.person;
   }
