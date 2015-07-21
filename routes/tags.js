@@ -1,9 +1,33 @@
 var contentType = require('../middleware/contentType'),
-    ngpvanAPIClient = require('../lib/ngpvanapi-client'),
     osdi = require('../lib/osdi'),
-    vanRequest = require('../lib/van-request-helper');
+    bridge = require('../lib/bridge');
 
-function translate(ac) {
+function getAll(req, res) {
+  var vanClient = bridge.createClient(req);
+  var vanPaginationParams = bridge.getVANPaginationParams(req);
+  
+  var resourcePromise = vanClient.activistCodes.getMany(null, null, null,
+    vanPaginationParams.top, vanPaginationParams.skip);
+
+  bridge.sendMultiResourceResponse(resourcePromise, vanPaginationParams, 
+    oneResourceTranslator, 'tags', res);
+}
+
+function getOne(req, res) {
+  var vanClient = bridge.createClient(req);
+  
+  var id = 0;
+  if (req && req.params && req.params.id) {
+    id = req.params.id;
+  }
+
+  var resourcePromise = vanClient.activistCodes.getOne(id);
+  
+  bridge.sendSingleResourceResponse(resourcePromise, oneResourceTranslator,
+    'tags', res);
+}
+
+function oneResourceTranslator(ac) {
     var answer = osdi.response.createCommonItem(
       ac.name,
       ac.description);
@@ -11,22 +35,6 @@ function translate(ac) {
   osdi.response.addIdentifier(answer, 'VAN:' + ac.activistCodeId);
   osdi.response.addSelfLink(answer, 'tags', ac.activistCodeId);
   return answer;
-}
-
-function validate(activistCode, id) {
-  return activistCode &&
-         typeof activistCode.activistCodeId !== 'undefined' &&
-         parseInt(activistCode.activistCodeId) === id;
-}
-
-function getOne(req, res) {
-  vanRequest.getOne(req, res, 'tags', validate,
-    translate, ngpvanAPIClient.activistCodes);
-}
-
-function getAll(req, res) {
-  vanRequest.getAll(req, res, 'tags', translate,
-    ngpvanAPIClient.activistCodes);
 }
 
 module.exports = function (app) {

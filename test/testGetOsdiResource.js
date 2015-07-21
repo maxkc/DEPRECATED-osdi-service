@@ -12,7 +12,8 @@ function testGetOsdiResource(osdiType, itemsFactory, vanType, validate) {
   var clientMock;
   var getItemResponseHandler, getItemsResponseHandler;
   var vanItem, vanItems;
-  beforeEach(function() {
+  
+  beforeEach(function(done) {
     getItemResponseHandler = new testService.VanResponseHandlerMock();
     getItemsResponseHandler = new testService.VanResponseHandlerMock();
 
@@ -34,8 +35,9 @@ function testGetOsdiResource(osdiType, itemsFactory, vanType, validate) {
     sinon.spy(clientMock[vanType + 's'], 'getOne');
     sinon.spy(clientMock[vanType + 's'], 'getAll');
 
-    var mocks = {'../lib/ngpvanapi-client': clientMock};
+    var mocks = {'../lib/ngpvan-api-client': clientMock};
     app = proxyquire('../app.js', mocks);
+    done();
   });
 
   describe('GET ' + osdiType + 's/' + osdiType + 'Id', function() {
