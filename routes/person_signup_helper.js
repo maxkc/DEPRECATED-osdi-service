@@ -40,7 +40,6 @@ function translate(req) {
     }
 
     vanPerson.email.isPreferred = isPreferred;
-    vanPerson.email.address_type = 'Personal';
   }
 
   return vanPerson;

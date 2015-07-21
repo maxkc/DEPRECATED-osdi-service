@@ -31,7 +31,6 @@ function translateToMatchCandidate(req) {
     }
 
     answer.email.isPreferred = isPreferred;
-    answer.email.address_type = 'Personal';
   }
 
   if (osdiPerson.phone_numbers && osdiPerson.phone_numbers[0]) {
@@ -43,13 +42,13 @@ function translateToMatchCandidate(req) {
     };
 
     answer.phone = {};
-    answer.phone.phonueNumber = osdiPerson.phone_numbers[0].number;
+    answer.phone.phoneNumber = osdiPerson.phone_numbers[0].number;
     answer.phone.ext = osdiPerson.phone_numbers[0].extension;
     answer.phone.isPreferred =
       osdiPerson.phone_numbers[0].primary ? true : false;
 
     var osdiNumberType = typeMapping[osdiPerson.phone_numbers[0].number_type];
-    answer.phone.phoneType  = numberType ? numberType : null;
+    answer.phone.phoneType  = osdiNumberType ? osdiNumberType : null;
   }
 
   if (osdiPerson.postal_addresses && osdiPerson.postal_addresses[0]) {
@@ -90,28 +89,78 @@ function translateToActivistCodes(req) {
 }
 
 function translateToOSDIPerson(vanPerson) {
-  return {};
+  var answer = {
+    identifiers: [
+      'VAN:' + vanPerson.vanId
+    ],
+    given_name: vanPerson.firstName,
+    family_name: vanPerson.lastName,
+    additional_name: vanPerson.middleName,
+    _links: {
+      self: {
+        href: config.get('apiEndpoint') + 'people/' + vanPerson.vanId
+      }
+    }
+  };
+  
+  var addressTypes = [ 'Home', 'Work', 'Mailing' ];
+  
+  answer.postal_addresses = _.map(vanPerson.addresses, function(address) {
+    return {
+      primary: address.isPreferred ? true : false,
+      address_lines: [
+        address.addressLine1,
+        address.addressLine2,
+        address.addressLine3
+      ],
+      locality: address.city,
+      region: address.stateOrProvince,
+      postal_code: address.zipOrPostalCode,
+      country: address.countryCode,
+      address_type: _.indexOf(address.type, addressTypes) >= 0 ?
+        address.type : null
+    };
+  });
+  
+  answer.email_addresses = _.map(vanPerson.emails, function(email) {
+    return {
+      primary: email.isPreferred ? true: false,
+      address: email.email,
+    };
+  });
+  
+  var phoneTypes = [ 'Home', 'Work', 'Cell', 'Mobile', 'Fax' ];
+  
+  answer.phone_numbers = _.map(vanPerson.phones, function(phone) {
+    return {
+      primary: phone.isPreferred ? true : false,
+      number: phone.phoneNumber,
+      extension: phone.ext,
+      number_type: _.indexOf(phone.phoneType, phoneTypes) >= 0 ?
+        phone.phoneType : null
+
+    };
+  });
+  
+  return answer;
 }
 
 function signup(req, res) {
   var vanClient = bridge.createClient(req);
 
   var matchCandidate = translateToMatchCandidate(req);
-  var acs = translateToActivistCodes(req);
+  var activistCodeIds = translateToActivistCodes(req);
   var originalMatchResponse = null;
+  
   var personPromise = vanClient.people.findOrCreate(matchCandidate).
     then(function(matchResponse) {
       originalMatchResponse = matchResponse;
       var vanId = matchResponse.vanId;
-
-      var promises = _.map(acs, function (activistCodeId) {
-        return vanClient.people.applyActivistCode(vanId, activistCodeId);
-      });
-
-      return BPromise.all(promises);
+      return vanClient.people.applyActivistCodes(vanId, activistCodeIds);
     }).
     then(function() {
-      return vanClient.people.getOne(originalMatchResponse.vanId);
+      var expand = ['phones', 'emails', 'addresses'];
+      return vanClient.people.getOne(originalMatchResponse.vanId, expand);
     });
 
   bridge.sendSingleResourceResponse(personPromise, translateToOSDIPerson,
