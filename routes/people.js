@@ -60,9 +60,13 @@ function translateToMatchCandidate(req) {
     };
 
     answer.address = {};
-    answer.address.addressLine1 = osdiAddress.address_lines[0];
-    answer.address.addressLine2 = osdiAddress.address_lines[1];
-    answer.address.addressLine3 = osdiAddress.address_lines[2];
+
+    if (osdiAddress.address_lines) {
+      answer.address.addressLine1 = osdiAddress.address_lines[0];
+      answer.address.addressLine2 = osdiAddress.address_lines[1];
+      answer.address.addressLine3 = osdiAddress.address_lines[2];
+    }
+
     answer.address.city = osdiAddress.locality;
     answer.address.stateOrProvince = osdiAddress.region;
     answer.address.zipOrPostalCode = osdiAddress.postal_code;
