@@ -7,10 +7,12 @@ var express = require('express'),
     routes = require('./routes'),
     config = require('./config'),
     notSupported = require('./middleware/notSupported'),
+    halParser = require('./middleware/halParser'),
     app = module.exports = express();
 
 app.use(iefix({ contentType: 'application/x-www-form-urlencoded' }));
-app.use(bodyParser.json());
+app.use(bodyParser.text({ 'type': 'application/hal+json' }));
+app.use(halParser);
 app.use(cors());
 
 var key;
