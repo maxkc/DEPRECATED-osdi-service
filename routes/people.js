@@ -92,6 +92,25 @@ function translateToActivistCodes(req) {
   return answer;
 }
 
+function translateToScriptResponse(req) {
+  var answer = [];
+  
+  if (req && req.body && req.body.add_tags) {
+    answer = _.map(req.body.add_answers, function(survey_answer) {
+      var re = /api\/v1\/questions\/(.*)$/i;
+      var questionId = survey_answer.question.match(re)[1];
+
+      return {
+        surveyQuestionId: questionId,
+        surveyResponseId: survey_answer.responses[0]
+      };
+    });
+  }
+  
+  return answer;
+  
+}
+
 function translateToOSDIPerson(vanPerson) {
   var answer = {
     identifiers: [
@@ -171,7 +190,82 @@ function signup(req, res) {
     'people', res);
 }
 
+function getOne(req, res) {
+  var vanClient = bridge.createClient(req);
+  
+  var vanId = 0;
+  if (req && req.params && req.params.id) {
+    vanId = req.params.id;
+  }
+
+  var resourcePromise = vanClient.surveyQuestions.getOne(vanId);
+  var expand = ['phones', 'emails', 'addresses'];
+  var personPromise = vanClient.people.getOne(vanId, expand);
+
+  bridge.sendSingleResourceResponse(personPromise, translateToOSDIPerson,
+    'people', res);
+}
+
+
+function canvass(req, res) {
+  var vanClient = bridge.createClient(req);
+  
+  var vanId = 0;
+  if (req && req.params && req.params.id) {
+    vanId = req.params.id;
+  }
+  
+  var canvassPromise;
+  
+  var canvass = req.body.canvass;
+  if (canvass.status_code) {
+    canvassPromise = vanClient.people.postNonCanvass(vanId, canvass.status_code,
+      canvass.contact_type, canvass.action_date);
+  }
+  
+  else {
+    var activistCodeIds = translateToActivistCodes(req);
+    var surveyResponses = translateToScriptResponse(req);
+    
+    var canvassResponses = _.union(
+      _.map(activistCodeIds, function(id) {
+        return {
+          'activistCodeId': id,
+          'action': 'Apply',
+          'type': 'ActivistCode'
+        };
+      }),
+      _.map(surveyResponses, function(surveyResponse) {
+        var answer = surveyResponse;
+        answer.type = 'SurveyResponse';
+        return answer;
+      })
+    );
+    
+    canvassPromise = vanClient.people.postCanvassResponses(vanId,
+      canvassResponses, canvass.contact_type, canvass.action_date);
+  }
+  
+  function translateToOSDICanvass() {
+    var canvass = req.body.canvass;
+    var answer = canvass;
+    answer.identifiers = [ 'VAN:' + vanId ];
+    answer._links = {
+      'osdi:target': {
+        href: config.get('apiEndpoint') + 'people/' + vanId
+      }
+    };
+    
+    return answer;
+  }
+
+  bridge.sendSingleResourceResponse(canvassPromise, translateToOSDICanvass,
+    'people', res);
+}
+
 
 module.exports = function (app) {
+  app.get('/api/v1/people/:id', contentType, getOne);
   app.post('/api/v1/people/person_signup_helper', contentType, signup);
+  app.post('/api/v1/people/:id/record_canvass_helper', contentType, canvass);
 };
