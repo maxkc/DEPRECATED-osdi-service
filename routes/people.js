@@ -94,7 +94,7 @@ function translateToActivistCodes(req) {
 
 function translateToScriptResponse(req) {
   var answer = [];
-  
+
   if (req && req.body && req.body.add_tags) {
     answer = _.map(req.body.add_answers, function(survey_answer) {
       var re = /api\/v1\/questions\/(.*)$/i;
@@ -106,9 +106,9 @@ function translateToScriptResponse(req) {
       };
     });
   }
-  
+
   return answer;
-  
+
 }
 
 function translateToOSDIPerson(vanPerson) {
@@ -125,9 +125,9 @@ function translateToOSDIPerson(vanPerson) {
       }
     }
   };
-  
+
   var addressTypes = [ 'Home', 'Work', 'Mailing' ];
-  
+
   answer.postal_addresses = _.map(vanPerson.addresses, function(address) {
     return {
       primary: address.isPreferred ? true : false,
@@ -144,16 +144,16 @@ function translateToOSDIPerson(vanPerson) {
         address.type : null
     };
   });
-  
+
   answer.email_addresses = _.map(vanPerson.emails, function(email) {
     return {
       primary: email.isPreferred ? true: false,
       address: email.email,
     };
   });
-  
+
   var phoneTypes = [ 'Home', 'Work', 'Cell', 'Mobile', 'Fax' ];
-  
+
   answer.phone_numbers = _.map(vanPerson.phones, function(phone) {
     return {
       primary: phone.isPreferred ? true : false,
@@ -164,7 +164,7 @@ function translateToOSDIPerson(vanPerson) {
 
     };
   });
-  
+
   return answer;
 }
 
@@ -174,7 +174,7 @@ function signup(req, res) {
   var matchCandidate = translateToMatchCandidate(req);
   var activistCodeIds = translateToActivistCodes(req);
   var originalMatchResponse = null;
-  
+
   var personPromise = vanClient.people.findOrCreate(matchCandidate).
     then(function(matchResponse) {
       originalMatchResponse = matchResponse;
@@ -192,13 +192,12 @@ function signup(req, res) {
 
 function getOne(req, res) {
   var vanClient = bridge.createClient(req);
-  
+
   var vanId = 0;
   if (req && req.params && req.params.id) {
     vanId = req.params.id;
   }
 
-  var resourcePromise = vanClient.surveyQuestions.getOne(vanId);
   var expand = ['phones', 'emails', 'addresses'];
   var personPromise = vanClient.people.getOne(vanId, expand);
 
@@ -209,24 +208,24 @@ function getOne(req, res) {
 
 function canvass(req, res) {
   var vanClient = bridge.createClient(req);
-  
+
   var vanId = 0;
   if (req && req.params && req.params.id) {
     vanId = req.params.id;
   }
-  
+
   var canvassPromise;
-  
+
   var canvass = req.body.canvass;
   if (canvass.status_code) {
     canvassPromise = vanClient.people.postNonCanvass(vanId, canvass.status_code,
       canvass.contact_type, canvass.action_date);
   }
-  
+
   else {
     var activistCodeIds = translateToActivistCodes(req);
     var surveyResponses = translateToScriptResponse(req);
-    
+
     var canvassResponses = _.union(
       _.map(activistCodeIds, function(id) {
         return {
@@ -241,11 +240,11 @@ function canvass(req, res) {
         return answer;
       })
     );
-    
+
     canvassPromise = vanClient.people.postCanvassResponses(vanId,
       canvassResponses, canvass.contact_type, canvass.action_date);
   }
-  
+
   function translateToOSDICanvass() {
     var canvass = req.body.canvass;
     var answer = canvass;
@@ -255,7 +254,7 @@ function canvass(req, res) {
         href: config.get('apiEndpoint') + 'people/' + vanId
       }
     };
-    
+
     return answer;
   }
 
