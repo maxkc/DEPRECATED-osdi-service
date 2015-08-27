@@ -23,6 +23,10 @@ function apiRoot(req, res) {
         'href': root + 'questions',
         'title': 'The collection of questions in the system'
       },
+      "osdi:people": {
+        "href": root + 'people',
+        "title": "The collection of people in the system"
+      },
       "osdi:person_signup_helper": {
           "href": root + 'people/person_signup',
           "title": "The person signup helper for the system"
