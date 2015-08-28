@@ -1,5 +1,4 @@
-var contentType = require('../middleware/contentType'),
-    ngpvanAPIClient = require('../lib/ngpvan-api-client'),
+var ngpvanAPIClient = require('../lib/ngpvan-api-client'),
     BPromise = require('bluebird'),
     osdi = require('../lib/osdi'),
     config = require('../config'),
@@ -276,7 +275,7 @@ function canvass(req, res) {
 
 
 module.exports = function (app) {
-  app.get('/api/v1/people/:id', contentType, getOne);
-  app.post('/api/v1/people/person_signup_helper', contentType, signup);
-  app.post('/api/v1/people/:id/record_canvass_helper', contentType, canvass);
+  app.get('/api/v1/people/:id', getOne);
+  app.post('/api/v1/people/person_signup_helper', signup);
+  app.post('/api/v1/people/:id/record_canvass_helper', canvass);
 };
