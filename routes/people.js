@@ -95,7 +95,7 @@ function translateToActivistCodes(req) {
 function translateToScriptResponse(req) {
   var answer = [];
 
-  if (req && req.body && req.body.add_tags) {
+  if (req && req.body && req.body.add_answers) {
     answer = _.map(req.body.add_answers, function(survey_answer) {
       var re = /api\/v1\/questions\/(.*)$/i;
       var questionId = survey_answer.question.match(re)[1];
@@ -220,9 +220,18 @@ function canvass(req, res) {
   var canvassPromise;
 
   var canvass = req.body.canvass;
+
+  var contactTypeId = null;
+  if (canvass.contact_type === 'phone') {
+    contactTypeId = 1;
+  }
+  else if (canvass.contact_type === 'walk') {
+    contactTypeId = 2;
+  }
+
   if (canvass.status_code) {
     canvassPromise = vanClient.people.postNonCanvass(vanId, canvass.status_code,
-      canvass.contact_type, canvass.action_date);
+      contactTypeId, canvass.action_date);
   }
 
   else {
@@ -245,7 +254,7 @@ function canvass(req, res) {
     );
 
     canvassPromise = vanClient.people.postCanvassResponses(vanId,
-      canvassResponses, canvass.contact_type, canvass.action_date);
+      canvassResponses, contactTypeId, canvass.action_date);
   }
 
   function translateToOSDICanvass() {
