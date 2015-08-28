@@ -122,6 +122,9 @@ function translateToOSDIPerson(vanPerson) {
     _links: {
       self: {
         href: config.get('apiEndpoint') + 'people/' + vanPerson.vanId
+      },
+      "osdi:record_canvass_helper": {
+        href: config.get('apiEndpoint') + 'people/' + vanPerson.vanId + '/record_canvass_helper'
       }
     }
   };
