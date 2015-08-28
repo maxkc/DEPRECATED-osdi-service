@@ -1,6 +1,5 @@
 
-var contentType = require('../middleware/contentType'),
-    config = require('../config');
+var config = require('../config');
 
 function apiRoot(req, res) {
   var root = config.get('apiEndpoint');
@@ -39,7 +38,7 @@ function apiRoot(req, res) {
 
 
 module.exports = function (app) {
-  app.get('/api/v1/', contentType, apiRoot);
+  app.get('/api/v1/', apiRoot);
 };
 
 
