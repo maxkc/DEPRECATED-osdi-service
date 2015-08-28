@@ -9,7 +9,7 @@ function apiRoot(req, res) {
     max_pagesize: 200,
     vendor_name: 'NGP VAN, Inc.',
     product_name: 'VAN',
-    osdi_version: '1.0',
+    osdi_version: '1.0.3',
     _links: {
       self: {
         href: root,
