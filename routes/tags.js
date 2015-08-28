@@ -33,6 +33,8 @@ function oneResourceTranslator(ac) {
 
   osdi.response.addIdentifier(answer, 'VAN:' + ac.activistCodeId);
   osdi.response.addSelfLink(answer, 'tags', ac.activistCodeId);
+  answer.curies = [ { name: 'osdi', 'href': 'http://developers.ngpvan.com/osdi#{rel}', 'templated': true } ];
+  
   return answer;
 }
 
