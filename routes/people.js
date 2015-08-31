@@ -167,6 +167,8 @@ function translateToOSDIPerson(vanPerson) {
     };
   });
 
+  osdi.response.addCurie(answer, config.get('curieTemplate'));
+
   return answer;
 }
 
