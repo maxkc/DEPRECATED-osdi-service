@@ -1,5 +1,6 @@
 var osdi = require('../lib/osdi'),
-    bridge = require('../lib/bridge');
+    bridge = require('../lib/bridge'),
+    config = require('../config');
 
 function getAll(req, res) {
   var vanClient = bridge.createClient(req);
@@ -33,6 +34,8 @@ function oneResourceTranslator(ac) {
 
   osdi.response.addIdentifier(answer, 'VAN:' + ac.activistCodeId);
   osdi.response.addSelfLink(answer, 'tags', ac.activistCodeId);
+  osdi.response.addCurie(answer, config.get('curieTemplate'));
+  
   return answer;
 }
 

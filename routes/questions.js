@@ -1,4 +1,5 @@
-var osdi = require('../lib/osdi'),
+var config = require('../config'),
+    osdi = require('../lib/osdi'),
     bridge = require('../lib/bridge');
 
 function getAll(req, res) {
@@ -43,6 +44,8 @@ function oneResourceTranslator(sq) {
       title: response.name
     };
   });
+  osdi.response.addCurie(answer, config.get('curieTemplate'));
+
   return answer;
 }
 
