@@ -14,10 +14,10 @@ var express = require('express'),
 
 app.use(iefix({ contentType: 'application/x-www-form-urlencoded' }));
 app.use(bodyParser.text({ 'type': 'application/hal+json' }));
-app.use(contentType);
 app.use(halParser);
-app.use(cors());
 app.use(requireHttps);
+app.use(cors());
+app.use(contentType);
 
 var key;
 for (key in routes) {

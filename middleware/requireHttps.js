@@ -4,7 +4,7 @@ var config = require('../config');
 module.exports = function (req, res, next) {
   if (config.get('requireHttps')) {
     if (!isSecureRequest(req)) {
-      sendHTTPSRequired(req, res, next);
+      return sendHTTPSRequired(req, res);
     }
   }
 
