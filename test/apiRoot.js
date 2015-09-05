@@ -20,22 +20,34 @@ describe('AEP', function() {
         should.equal(body.max_pagesize, 200);
         should.equal(body.vendor_name, 'NGP VAN, Inc.');
         should.equal(body.product_name, 'VAN');
-        should.equal(body.osdi_version, '1.0');
+        should.equal(body.osdi_version, '1.0.3');
         should.equal(body._links.self.href,
-          'https://ngpvan-osdi-service.herokuapp.com/api/v1/');
+          'https://osdi.ngpvan.com/api/v1/');
         should.equal(body._links.self.title,
           'NGP VAN OSDI Service Entry Point');
 
         var tags = body._links['osdi:tags'];
         should.equal(tags.href,
-          'https://ngpvan-osdi-service.herokuapp.com/api/v1/tags');
+          'https://osdi.ngpvan.com/api/v1/tags');
         should.equal(tags.title, 'The collection of tags in the system');
 
         var questions = body._links['osdi:questions'];
         should.equal(questions.href,
-          'https://ngpvan-osdi-service.herokuapp.com/api/v1/questions');
+          'https://osdi.ngpvan.com/api/v1/questions');
         should.equal(questions.title,
           'The collection of questions in the system');
+
+        var people = body._links['osdi:people'];
+        should.equal(people.href,
+          'https://osdi.ngpvan.com/api/v1/people');
+        should.equal(people.title,
+          'The collection of people in the system');
+
+        var signup = body._links['osdi:person_signup_helper'];
+        should.equal(signup.href,
+          'https://osdi.ngpvan.com/api/v1/people/person_signup');
+        should.equal(signup.title,
+          'The person signup helper for the system');
 
         done();
       });
