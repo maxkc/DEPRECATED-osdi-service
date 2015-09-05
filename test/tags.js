@@ -18,6 +18,12 @@ function validateTag(ac, tag) {
 }
 
 describe('/api/v1/tags', function() {
+
+  it('should return translated activist code', function (done) {
+    testService.createVANServiceMock('activistCodes', 'getOne',
+      { 'name': 'blah', 'description': 'stuff' }, null);
+    done();
+  });
   testGetOsdiResource('tag', testService.createActivistCodes,
     'activistCode', validateTag);
 });

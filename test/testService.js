@@ -1,23 +1,31 @@
-var _ = require('lodash');
+var _ = require('lodash'),
+    ngpvanErrors = require('../lib/ngpvan-api-client').errors,
+    BPromise = require('bluebird');
 
-function VanResponseHandlerMock() {}
+function createVANServiceMock(resource, method, 
+  responseBody, exception) {
 
-VanResponseHandlerMock.prototype.handle =
-  function(vanEndpoint, apiKey, dbMode, id,
-      unauthorized, badRequest, success) {
-
-    if (this.forceSuccess) {
-      return success(this.successData);
-    }
-    if (this.forceUnauthorized) {
-      return unauthorized({});
-    }
-    if (this.forceNotFound) {
-      return success({});
-    }
-
-    badRequest({});
+  var service = {};
+  var service[resource] = {};
+  var service[resource][method] = function() {
+    return new BPromise(resolve) {
+      if (exception) {
+        throw exception;
+      }
+      else {
+        resolve(responseBody);
+      }
+    };
   };
+
+  var clientMock = {
+    '@global': true,
+    van: service,
+    errors:
+  };
+
+  var mocks = {'../lib/ngpvan-api-client': clientMock};
+}
 
 function createActivistCodes(count) {
   var acs = [];
@@ -57,7 +65,7 @@ function createSurveyQuestions(count) {
 }
 
 module.exports = {
-  VanResponseHandlerMock: VanResponseHandlerMock,
+  createVANServiceMock: createVANServiceMock,
   createActivistCodes: createActivistCodes,
   createSurveyQuestions: createSurveyQuestions
 };
