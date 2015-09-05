@@ -1,18 +1,13 @@
-var ngpvanAPIClient = require('../lib/ngpvan-api-client'),
-    BPromise = require('bluebird'),
-    osdi = require('../lib/osdi'),
+var osdi = require('../lib/osdi'),
     config = require('../config'),
-    auth = require('basic-auth'),
     bridge = require('../lib/bridge'),
     _ = require('lodash');
-
-var vanEndpoint = config.get('vanEndpoint');
 
 function valueOrBlank(value) {
   var answer = value;
 
   if (!value) {
-    answer = "";
+    answer = '';
   }
 
   return answer;
@@ -132,8 +127,9 @@ function translateToOSDIPerson(vanPerson) {
       self: {
         href: config.get('apiEndpoint') + 'people/' + vanPerson.vanId
       },
-      "osdi:record_canvass_helper": {
-        href: config.get('apiEndpoint') + 'people/' + vanPerson.vanId + '/record_canvass_helper'
+      'osdi:record_canvass_helper': {
+        href: config.get('apiEndpoint') + 
+          'people/' + vanPerson.vanId + '/record_canvass_helper'
       }
     }
   };
@@ -151,7 +147,7 @@ function translateToOSDIPerson(vanPerson) {
     }
 
     if (address.addressLine3) {
-      address_lines.push(address.addressLine3)
+      address_lines.push(address.addressLine3);
     }
 
 
@@ -163,7 +159,7 @@ function translateToOSDIPerson(vanPerson) {
       postal_code: valueOrBlank(address.zipOrPostalCode),
       country: valueOrBlank(address.countryCode),
       address_type: _.indexOf(address.type, addressTypes) >= 0 ?
-        address.type : ""
+        address.type : ''
     };
   });
 
@@ -182,7 +178,7 @@ function translateToOSDIPerson(vanPerson) {
       number: valueOrBlank(phone.phoneNumber),
       extension: valueOrBlank(phone.ext),
       number_type: _.indexOf(phone.phoneType, phoneTypes) >= 0 ?
-        phone.phoneType : ""
+        phone.phoneType : ''
 
     };
   });
@@ -240,19 +236,20 @@ function canvass(req, res) {
 
   var canvassPromise;
 
-  var canvass = req.body.canvass;
+  var requestedCanvass = req.body.canvass;
 
   var contactTypeId = null;
-  if (canvass.contact_type === 'phone') {
+  if (requestedCanvass.contact_type === 'phone') {
     contactTypeId = 1;
   }
-  else if (canvass.contact_type === 'walk') {
+  else if (requestedCanvass.contact_type === 'walk') {
     contactTypeId = 2;
   }
 
-  if (canvass.status_code) {
-    canvassPromise = vanClient.people.postNonCanvass(vanId, canvass.status_code,
-      contactTypeId, canvass.action_date);
+  if (requestedCanvass.status_code) {
+    canvassPromise = vanClient.people.postNonCanvass(vanId, 
+      requestedCanvass.status_code, contactTypeId, 
+      requestedCanvass.action_date);
   }
 
   else {
@@ -275,12 +272,13 @@ function canvass(req, res) {
     );
 
     canvassPromise = vanClient.people.postCanvassResponses(vanId,
-      canvassResponses, contactTypeId, canvass.action_date);
+      canvassResponses, contactTypeId, 
+      requestedCanvass.action_date);
   }
 
   function translateToOSDICanvass() {
-    var canvass = req.body.canvass;
-    var answer = canvass;
+    var requestedCanvass = req.body.canvass;
+    var answer = requestedCanvass;
     answer.identifiers = [ 'VAN:' + vanId ];
     answer._links = {
       'osdi:target': {
@@ -291,8 +289,8 @@ function canvass(req, res) {
     return answer;
   }
 
-  bridge.sendSingleResourceResponse(canvassPromise, translateToOSDICanvass,
-    'people', res);
+  bridge.sendSingleResourceResponse(canvassPromise, 
+    translateToOSDICanvass, 'people', res);
 }
 
 
