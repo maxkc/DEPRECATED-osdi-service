@@ -8,6 +8,16 @@ var ngpvanAPIClient = require('../lib/ngpvan-api-client'),
 
 var vanEndpoint = config.get('vanEndpoint');
 
+function valueOrBlank(value) {
+  var answer = value;
+
+  if (!value) {
+    answer = "";
+  }
+
+  return answer;
+}
+
 function translateToMatchCandidate(req) {
   var osdiPerson = {};
 
@@ -115,9 +125,9 @@ function translateToOSDIPerson(vanPerson) {
     identifiers: [
       'VAN:' + vanPerson.vanId
     ],
-    given_name: vanPerson.firstName,
-    family_name: vanPerson.lastName,
-    additional_name: vanPerson.middleName,
+    given_name: valueOrBlank(vanPerson.firstName),
+    family_name: valueOrBlank(vanPerson.lastName),
+    additional_name: valueOrBlank(vanPerson.middleName),
     _links: {
       self: {
         href: config.get('apiEndpoint') + 'people/' + vanPerson.vanId
@@ -131,26 +141,36 @@ function translateToOSDIPerson(vanPerson) {
   var addressTypes = [ 'Home', 'Work', 'Mailing' ];
 
   answer.postal_addresses = _.map(vanPerson.addresses, function(address) {
+    var address_lines = [];
+    if (address.addressLine1) {
+      address_lines.push(address.addressLine1);
+    }
+
+    if (address.addressLine2) {
+      address_lines.push(address.addressLine2);
+    }
+
+    if (address.addressLine3) {
+      address_lines.push(address.addressLine3)
+    }
+
+
     return {
       primary: address.isPreferred ? true : false,
-      address_lines: [
-        address.addressLine1,
-        address.addressLine2,
-        address.addressLine3
-      ],
-      locality: address.city,
-      region: address.stateOrProvince,
-      postal_code: address.zipOrPostalCode,
-      country: address.countryCode,
+      address_lines: address_lines,
+      locality: valueOrBlank(address.city),
+      region: valueOrBlank(address.stateOrProvince),
+      postal_code: valueOrBlank(address.zipOrPostalCode),
+      country: valueOrBlank(address.countryCode),
       address_type: _.indexOf(address.type, addressTypes) >= 0 ?
-        address.type : null
+        address.type : ""
     };
   });
 
   answer.email_addresses = _.map(vanPerson.emails, function(email) {
     return {
       primary: email.isPreferred ? true: false,
-      address: email.email,
+      address: valueOrBlank(email.email),
     };
   });
 
@@ -159,10 +179,10 @@ function translateToOSDIPerson(vanPerson) {
   answer.phone_numbers = _.map(vanPerson.phones, function(phone) {
     return {
       primary: phone.isPreferred ? true : false,
-      number: phone.phoneNumber,
-      extension: phone.ext,
+      number: valueOrBlank(phone.phoneNumber),
+      extension: valueOrBlank(phone.ext),
       number_type: _.indexOf(phone.phoneType, phoneTypes) >= 0 ?
-        phone.phoneType : null
+        phone.phoneType : ""
 
     };
   });
