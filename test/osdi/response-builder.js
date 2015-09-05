@@ -1,6 +1,7 @@
 /*global describe, it, beforeEach */
 
-var osdi = require('../../lib/osdi').response;
+var osdi = require('../../lib/osdi').response,
+    reqparser = require('../../lib/osdi').request;
 var root = require('../../config').get('apiEndpoint');
 var sinon = require('sinon');
 require('should');
@@ -171,7 +172,7 @@ describe('osdi.response-helper', function() {
         }
       };
 
-      var pagination = osdi.getPaginationOptions(req);
+      var pagination = reqparser.getPaginationOptions(req);
 
       pagination.page.should.equal(123);
     });
@@ -183,13 +184,13 @@ describe('osdi.response-helper', function() {
         }
       };
 
-      var pagination = osdi.getPaginationOptions(req);
+      var pagination = reqparser.getPaginationOptions(req);
 
       pagination.perPage.should.equal(456);
     });
 
     it('returns empty object if no pagination options sent', function() {
-      var pagination = osdi.getPaginationOptions({});
+      var pagination = reqparser.getPaginationOptions({});
 
       pagination.should.eql({});
     });
@@ -201,7 +202,7 @@ describe('osdi.response-helper', function() {
         }
       };
 
-      var pagination = osdi.getPaginationOptions(req);
+      var pagination = reqparser.getPaginationOptions(req);
 
       pagination.perPage.should.equal(50);
     });
@@ -234,21 +235,24 @@ describe('osdi.response-helper', function() {
       sinon.spy(res, 'status');
       sinon.spy(res, 'send');
     });
-    it('returns a function that sends 400 if called without err', function() {
+    it('returns a function that sends 400 with translated errors', function() {
       osdi.badRequest(res, 'items')();
       res.status.calledOnce.should.be.true();
       res.status.calledWith(400).should.be.true();
       res.send.calledOnce.should.be.true();
     });
 
-    it('returns a function that sends 500 if called without err', function() {
-      osdi.badRequest(res, 'items')({});
-      res.status.calledOnce.should.be.true();
-      res.status.calledWith(500).should.be.true();
-      res.send.calledOnce.should.be.true();
-    });
-
     it('returns a function that sends formatted error', function() {
+      var errors = [
+        {
+          'code': 'BAD_CALL1',
+          'description': 'First bad call'
+        },
+        {
+          'code': 'BAD_CALL2',
+          'description': 'Second bad call'
+        }
+      ];
       var expected = {
         'request_type': 'atomic',
         'response_code': 400,
@@ -256,16 +260,11 @@ describe('osdi.response-helper', function() {
           {
             'resource': 'osdi:items',
             'response_code': 400,
-            'errors': [
-              {
-                'code': 'UNKNOWN',
-                'description': 'Translating VAN errors is not yet supported.'
-              }
-            ]
+            'errors': errors
           }
         ]
       };
-      osdi.badRequest(res, 'items')();
+      osdi.badRequest(res, 'items')(errors);
       res.send.calledWith(expected).should.be.true();
       res.send.calledOnce.should.be.true();
     });

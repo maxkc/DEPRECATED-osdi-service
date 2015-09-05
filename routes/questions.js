@@ -1,9 +1,33 @@
-var contentType = require('../middleware/contentType'),
-    ngpvanAPIClient = require('../lib/ngpvanapi-client'),
+var config = require('../config'),
     osdi = require('../lib/osdi'),
-    vanRequest = require('../lib/van-request-helper');
+    bridge = require('../lib/bridge');
 
-function translate(sq) {
+function getAll(req, res) {
+  var vanClient = bridge.createClient(req);
+  var vanPaginationParams = bridge.getVANPaginationParams(req);
+
+  var resourcePromise = vanClient.surveyQuestions.getMany(null, null, null,
+    null, null, vanPaginationParams.top, vanPaginationParams.skip);
+
+  bridge.sendMultiResourceResponse(resourcePromise, vanPaginationParams,
+    oneResourceTranslator, 'questions', res);
+}
+
+function getOne(req, res) {
+  var vanClient = bridge.createClient(req);
+
+  var id = 0;
+  if (req && req.params && req.params.id) {
+    id = req.params.id;
+  }
+
+  var resourcePromise = vanClient.surveyQuestions.getOne(id);
+
+  bridge.sendSingleResourceResponse(resourcePromise, oneResourceTranslator,
+    'questions', res);
+}
+
+function oneResourceTranslator(sq) {
   var answer = osdi.response.createCommonItem(
     sq.mediumName,
     sq.scriptQuestion);
@@ -20,27 +44,12 @@ function translate(sq) {
       title: response.name
     };
   });
+  osdi.response.addCurie(answer, config.get('curieTemplate'));
+
   return answer;
 }
 
-function validate(surveyQuestion, id) {
-  return surveyQuestion &&
-         typeof surveyQuestion.surveyQuestionId !== 'undefined' &&
-         parseInt(surveyQuestion.surveyQuestionId) === id;
-}
-
-function getOne(req, res) {
-  vanRequest.getOne(req, res, 'questions', validate,
-    translate, ngpvanAPIClient.surveyQuestions);
-}
-
-function getAll(req, res) {
-  vanRequest.getAll(req, res, 'questions', translate,
-    ngpvanAPIClient.surveyQuestions);
-}
-
-
 module.exports = function (app) {
-  app.get('/api/v1/questions', contentType, getAll);
-  app.get('/api/v1/questions/:id', contentType, getOne);
+  app.get('/api/v1/questions', getAll);
+  app.get('/api/v1/questions/:id', getOne);
 };

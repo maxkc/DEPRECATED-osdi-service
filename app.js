@@ -7,11 +7,17 @@ var express = require('express'),
     routes = require('./routes'),
     config = require('./config'),
     notSupported = require('./middleware/notSupported'),
+    contentType = require('./middleware/contentType'),
+    halParser = require('./middleware/halParser'),
+    requireHttps = require('./middleware/requireHttps'),
     app = module.exports = express();
 
 app.use(iefix({ contentType: 'application/x-www-form-urlencoded' }));
-app.use(bodyParser.json());
+app.use(bodyParser.text({ 'type': 'application/hal+json' }));
+app.use(halParser);
+app.use(requireHttps);
 app.use(cors());
+app.use(contentType);
 
 var key;
 for (key in routes) {
@@ -30,6 +36,7 @@ app.all('/*', function (req, res) {
 
 if (!module.parent) {
   var port = config.get('port');
+
   app.listen(port, function() {
     console.log('Listening on %d.', port);
   });

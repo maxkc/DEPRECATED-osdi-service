@@ -12,14 +12,15 @@ describe('notSupported', function() {
     supertest(app).
       get('/api/v1/items').
       expect(500, function(err, res) {
-        should.equal(res.body.request_type, 'atomic');
-        should.equal(res.body.response_code, 500);
-        res.body.resource_status.should.be.length(1);
-        should.equal(res.body.resource_status[0].resource, '*');
-        should.equal(res.body.resource_status[0].response_code, '500');
-        res.body.resource_status[0].errors.should.be.length(1);
+        var responseBody = JSON.parse(res.text);
+        should.equal(responseBody.request_type, 'atomic');
+        should.equal(responseBody.response_code, 500);
+        responseBody.resource_status.should.be.length(1);
+        should.equal(responseBody.resource_status[0].resource, '*');
+        should.equal(responseBody.resource_status[0].response_code, '500');
+        responseBody.resource_status[0].errors.should.be.length(1);
         should.equal(
-          res.body.resource_status[0].errors[0].code,
+          responseBody.resource_status[0].errors[0].code,
           'NOT_SUPPORTED');
         done();
       });

@@ -5,15 +5,20 @@ var cfg = {
   // http://nodejs.org/api/process.html#process_process_env
   port : process.env.PORT || 8000,
 
-  apiEndpoint: 'https://ngpvan-osdi-service.herokuapp.com/api/v1/',
-  vanEndpoint: 'https://api.securevan.com/v4/',
-  defaultVanPageSize: 50
+  apiEndpoint: process.env.API_ENDPOINT ||
+    'https://osdi.ngpvan.com/api/v1/',
+  vanEndpoint: process.env.VAN_ENDPOINT ||
+    'https://api.securevan.com/v4/',
+  defaultVanPageSize: 50,
+  requireHttps: process.env.REQUIRE_HTTPS || false,
+  curieTemplate: process.env.CURIE_TEMPLATE ||
+    'http://developers.ngpvan.com/osdi#{rel}'
 
 };
 
 module.exports = {
   get: function (varName) {
-    if (cfg[varName]) {
+    if (cfg.hasOwnProperty(varName)) {
       return cfg[varName];
     } else {
       throw new Error('Config value not found: ' + varName);
