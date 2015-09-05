@@ -94,18 +94,23 @@ function translateToMatchCandidate(req) {
 function translateToActivistCodes(req) {
   var answer = [];
 
-  if (req && req.body && req.body.add_tags) {
-    answer = req.body.add_tags;
+  if (req && req.body && req.body.add_tags_uri) {
+    answer = _.map(req.body.add_tags_uri, function (tag) {
+      var re = /api\/v1\/tags\/(.*)$/i;
+      var tagId = tag.match(re)[1];
+
+      return tagId;
+    });
   }
 
   return answer;
 }
 
-function translateToScriptResponse(req) {
+function translateToScriptResponses(req) {
   var answer = [];
 
-  if (req && req.body && req.body.add_answers) {
-    answer = _.map(req.body.add_answers, function(survey_answer) {
+  if (req && req.body && req.body.add_questions_responses_uri) {
+    answer = _.map(req.body.add_questions_responses_uri, function(survey_answer) {
       var re = /api\/v1\/questions\/(.*)$/i;
       var questionId = survey_answer.question.match(re)[1];
 
@@ -118,6 +123,26 @@ function translateToScriptResponse(req) {
 
   return answer;
 
+}
+
+function translateToCanvassResponses(req) {
+  var activistCodeIds = translateToActivistCodes(req);
+  var surveyResponses = translateToScriptResponses(req);
+
+  return _.union(
+    _.map(activistCodeIds, function(id) {
+      return {
+        'activistCodeId': id,
+        'action': 'Apply',
+        'type': 'ActivistCode'
+      };
+    }),
+    _.map(surveyResponses, function(surveyResponse) {
+      var answer = surveyResponse;
+      answer.type = 'SurveyResponse';
+      return answer;
+    })
+  );
 }
 
 function translateToOSDIPerson(vanPerson) {
@@ -196,14 +221,15 @@ function signup(req, res) {
   var vanClient = bridge.createClient(req);
 
   var matchCandidate = translateToMatchCandidate(req);
-  var activistCodeIds = translateToActivistCodes(req);
+  var canvassResponses = translateToCanvassResponses(req);
   var originalMatchResponse = null;
 
   var personPromise = vanClient.people.findOrCreate(matchCandidate).
     then(function(matchResponse) {
       originalMatchResponse = matchResponse;
       var vanId = matchResponse.vanId;
-      return vanClient.people.applyActivistCodes(vanId, activistCodeIds);
+      return vanClient.people.postCanvassResponses(vanId,
+        canvassResponses, 0, canvass.action_date);
     }).
     then(function() {
       var expand = ['phones', 'emails', 'addresses'];
@@ -256,23 +282,7 @@ function canvass(req, res) {
   }
 
   else {
-    var activistCodeIds = translateToActivistCodes(req);
-    var surveyResponses = translateToScriptResponse(req);
-
-    var canvassResponses = _.union(
-      _.map(activistCodeIds, function(id) {
-        return {
-          'activistCodeId': id,
-          'action': 'Apply',
-          'type': 'ActivistCode'
-        };
-      }),
-      _.map(surveyResponses, function(surveyResponse) {
-        var answer = surveyResponse;
-        answer.type = 'SurveyResponse';
-        return answer;
-      })
-    );
+    var canvassResponses = translateToCanvassResponses(req);
 
     canvassPromise = vanClient.people.postCanvassResponses(vanId,
       canvassResponses, contactTypeId, canvass.action_date);
