@@ -12,7 +12,8 @@ var cfg = {
   defaultVanPageSize: 50,
   requireHttps: process.env.REQUIRE_HTTPS || false,
   curieTemplate: process.env.CURIE_TEMPLATE ||
-    'http://developers.ngpvan.com/osdi#{rel}'
+    'http://developers.ngpvan.com/osdi#{rel}',
+  node_env: process.env.NODE_ENV || 'development'
 
 };
 

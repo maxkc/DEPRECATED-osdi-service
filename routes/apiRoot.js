@@ -29,7 +29,12 @@ function apiRoot(req, res) {
       'osdi:person_signup_helper': {
           'href': root + 'people/person_signup',
           'title': 'The person signup helper for the system'
+      },
+      'osdi:scripts' : {
+          'href': root + 'scripts',
+          'title': 'The collection of scripts in the system'
       }
+
     }
   };
 

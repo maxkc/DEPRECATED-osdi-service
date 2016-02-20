@@ -44,8 +44,11 @@ function getScript(req, res) {
        res.send(result.body);
       } else {
         res.send(result.GetScriptResult);
-        console.log(client.lastRequest);
-        console.log(result.body);
+        if (config.get('node_env') == 'development') {
+          console.log(client.lastRequest);
+          console.log(result.body);
+        }
+
       }
     });
   });
@@ -83,8 +86,10 @@ function listScripts(req, res) {
         res.send(result.body);
       } else {
         res.send(result.ListScriptsResult.Scripts.Script);
-        console.log(client.lastRequest);
-        //console.log(err.statusCode);
+        if (config.get('node_env') == 'development') {
+          console.log(client.lastRequest);
+          console.log(result.body);
+        }
       }
     });
   });
@@ -92,7 +97,7 @@ function listScripts(req, res) {
 }
 
 module.exports = function (app) {
-  app.get('/api/osdisoap/scripts', listScripts);
-  app.get('/api/osdisoap/scripts/:id', getScript);
+  app.get('/api/v1/scripts', listScripts);
+  app.get('/api/v1/scripts/:id', getScript);
 
 };
