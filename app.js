@@ -10,6 +10,7 @@ var express = require('express'),
     contentType = require('./middleware/contentType'),
     halParser = require('./middleware/halParser'),
     requireHttps = require('./middleware/requireHttps'),
+    soap= require('soap'),
     app = module.exports = express();
 
 app.use(iefix({ contentType: 'application/x-www-form-urlencoded' }));
