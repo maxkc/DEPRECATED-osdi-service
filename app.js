@@ -18,6 +18,7 @@ app.use(bodyParser.text({ 'type': 'application/hal+json' }));
 app.use(halParser);
 app.use(requireHttps);
 app.use(cors());
+app.use('/browser', express.static('browser'));
 app.use(contentType);
 
 var key;
@@ -33,6 +34,10 @@ if (config.get('prettyJSON')) {
 
 app.all('/api/v1/*', function (req, res) {
   return notSupported.send(req, res);
+});
+
+app.get('/', function(req,res) {
+  res.redirect('/browser/browser.html#/api/v1');
 });
 
 app.all('/*', function (req, res) {

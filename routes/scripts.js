@@ -193,8 +193,6 @@ function scriptCollectionToOSDI(collection) {
     'self': {
       'href': (root + 'scripts')
     }
-
-
   };
 
   if (scripts) {
