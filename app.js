@@ -27,6 +27,10 @@ for (key in routes) {
   }
 }
 
+if (config.get('prettyJSON')) {
+  app.set('json spaces', 2);
+}
+
 app.all('/api/v1/*', function (req, res) {
   return notSupported.send(req, res);
 });
