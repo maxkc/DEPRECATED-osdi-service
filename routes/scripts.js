@@ -64,7 +64,10 @@ function scriptElementToOSDI(elem) {
     elem.ScriptQuestion
   );
 
-  ose.sequence = elem.attributes['SortOrder'];
+  if (elem.attributes['SortOrder']) {
+    ose.sequence = parseInt(elem.attributes['SortOrder']);
+  }
+
   osdi.response.addEmbeddedItems(ose, [elem], oneResourceTranslator, 'questions');
 
   return ose;
