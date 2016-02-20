@@ -23,7 +23,7 @@ function getScript(req, res) {
     id = req.params.id;
   }
 
-  var dbMode = (credentials.dbMode == "1") ? 'MyCampaign' : 'MyVoters';
+  var dbMode = (credentials.dbMode == "1") ? 'MyCampaign' : 'MyVoterFile';
 
   var url = 'https://api.securevan.com/services/v3/ScriptService.asmx?WSDL';
   var args = {
@@ -65,7 +65,7 @@ function listScripts(req, res) {
     id = req.params.id;
   }
 
-  var dbMode = (credentials.dbMode == "1") ? 'MyCampaign' : 'MyVoters';
+  var dbMode = (credentials.dbMode == "1") ? 'MyCampaign' : 'MyVoterFile';
 
   var url = 'https://api.securevan.com/services/v3/ScriptService.asmx?WSDL';
   var args = {
