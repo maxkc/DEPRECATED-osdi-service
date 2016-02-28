@@ -3,6 +3,9 @@ var config = require('../config'),
   osdi = require('../lib/osdi'),
   bridge = require('../lib/bridge');
 
+var xmlParseString = require('xml2js').parseString;
+var selectn = require('selectn');
+
 
 function getCredentials(apiToken) {
   if (typeof apiToken !== 'string') {
@@ -43,7 +46,8 @@ function getScript(req, res) {
     client.GetScript(args, function (err, result) {
 
       if (err) {
-        res.send(result.body);
+        handleSoapFault(result.statusCode, result.body, res,'script');
+
       } else {
         res.send(scriptToOSDI(result.GetScriptResult));
         if (config.get('node_env') == 'development') {
@@ -57,7 +61,45 @@ function getScript(req, res) {
 
 }
 
+function handleSoapFault(responseCode, responseBody, res, resourceType) {
 
+  xmlParseString(responseBody, function (err, result) {
+    console.dir(JSON.stringify(result));
+
+    var soapFaultCode = selectn('soap:Envelope.soap:Body[0].soap:Fault[0].faultcode[0]', result) || 'UNKNOWN';
+    switch (soapFaultCode) {
+      case 'VAN_ERROR_CODE_400':
+        responseCode = 404;
+        break;
+      case 'VAN_ERROR_CODE_101':
+        responseCode = 403;
+        break;
+      default:
+        responseCode = 500;
+    }
+
+    var error_block = {
+      'request_type': 'atomic',
+      'response_code': responseCode,
+      'resource_status': [
+        {
+          'resource': 'osdi:' + resourceType,
+          'response_code': responseCode,
+          'errors': [
+            {
+              'error_code': soapFaultCode,
+              'description': selectn('soap:Envelope.soap:Body[0].soap:Fault[0].faultstring[0]', result)
+            }
+          ]
+        }
+      ]
+    };
+    res.status(responseCode);
+    res.send(error_block);
+  });
+
+
+}
 function scriptElementToOSDI(elem) {
   var ose = osdi.response.createCommonItem(
     elem.attributes['Name'],
@@ -75,6 +117,8 @@ function scriptElementToOSDI(elem) {
 
 function scriptToOSDI(script) {
 
+  var elements=null;
+
   var oscript = osdi.response.createCommonItem(
     script.attributes['Name'],
     script.Description
@@ -85,7 +129,8 @@ function scriptToOSDI(script) {
   osdi.response.addIdentifier(oscript, 'VAN:' + script.attributes['ID']);
   osdi.response.addSelfLink(oscript, 'scripts', script.attributes['ID']);
 
-  osdi.response.addEmbeddedItems(oscript, script.ScriptElements.ScriptElement, scriptElementToOSDI, 'script_questions');
+  if (elements=selectn('ScriptElements.ScriptElement',script))
+  osdi.response.addEmbeddedItems(oscript, elements, scriptElementToOSDI, 'script_questions');
 
   return oscript;
 }
@@ -115,18 +160,6 @@ function oneResourceTranslator(sq) {
 
   osdi.response.addIdentifier(answer, 'VAN:' + sq.attributes['ID']);
   osdi.response.addSelfLink(answer, 'questions', sq.attributes['ID']);
-
-
-  /*
-
-   answer.responses = (sq.responses || []).map(function (response) {
-   return {
-   key: response.surveyResponseId,
-   name: response.mediumName,
-   title: response.name
-   };
-   });
-   */
   osdi.response.addCurie(answer, config.get('curieTemplate'));
 
   return answer;
@@ -147,7 +180,7 @@ function listScripts(req, res) {
   var args = {
     'criteria': {
       'Status': 'Active',
-      'DatabaseMode': 'BothModes'
+      'DatabaseMode': dbMode //'BothModes'
     }
     /* foo  */
   };
@@ -158,7 +191,7 @@ function listScripts(req, res) {
         'DatabaseMode': dbMode
       }
     }, '', 'myvan', 'https://api.securevan.com/Services/V3/');
-    client.ListScripts(args, function (err, result) {
+    client["ListScripts"](args, function (err, result) {
 
       if (err) {
         res.send(result.body);
