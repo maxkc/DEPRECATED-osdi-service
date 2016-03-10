@@ -99,28 +99,42 @@ function oneAttendanceTranslator(vanitem) {
     'Confirmed' : 'accepted'
   };
 
-  answer['van:signup'] = {
+  answer['van:shift'] = {
     shift_id: selectn('shift.EventShiftId', vanitem),
-    shift_name: selectn('shift.name',vanitem),
-    role_id: selectn('role.roleId',vanitem),
-    role_name: selectn('role.name',vanitem),
+    name: selectn('shift.name',vanitem)
+  };
+
+  answer['van:location']={
     location_id: selectn('location.locationId',vanitem),
-    location_venue: selectn('location.name',vanitem),
-    location_description: selectn('location.displayName',vanitem),
+    venue: selectn('location.name',vanitem),
+    description: selectn('location.displayName',vanitem)
+  };
+
+  answer['van:role'] = {
+    role_id: selectn('role.roleId',vanitem),
+    name: selectn('role.name',vanitem)
+  };
+
+  answer['van:status'] = {
     status_id: selectn('status.statusId',vanitem),
     status_name: selectn('status.name',vanitem),
-    person_first_name: selectn('person.firstName',vanitem),
-    person_last_name: selectn('person.lastName',vanitem),
-    person_van_id: selectn('person.vanId',vanitem)
   };
+
+  answer['van:person'] = {
+    first_name: selectn('person.firstName',vanitem),
+    last_name: selectn('person.lastName',vanitem),
+    van_id: selectn('person.vanId',vanitem)
+  };
+
   answer.status= statuses[selectn('status.name',vanitem)] || selectn('status.name',vanitem)
 
   osdi.response.addIdentifier(answer, 'VAN:' + vanitem.eventSignupId);
-  osdi.response.addSelfLink(answer, 'events', vanitem.eventSignupId);
+  osdi.response.addSelfLink(answer, 'TODO', vanitem.eventSignupId);
   osdi.response.addLink(answer,'osdi:person', 'people/' + vanitem.person.vanId);
+  osdi.response.addLink(answer,'osdi:event', 'events/' + vanitem.event.eventId);
   osdi.response.addCurie(answer, config.get('curieTemplate'));
   osdi.response.addEmbeddedItem(answer,vanitem.person,signupPersonTranslator,'person');
-  answer.raw=vanitem;
+
   return answer;
 }
 
@@ -192,6 +206,7 @@ function oneResourceTranslator(vanitem) {
 
   osdi.response.addIdentifier(answer, 'VAN:' + vanitem.eventId);
   osdi.response.addSelfLink(answer, 'events', vanitem.eventId);
+  osdi.response.addLink(answer,'osdi:attendances', 'events/' + vanitem.eventId + '/attendances');
   osdi.response.addCurie(answer, config.get('curieTemplate'));
 
   return answer;
