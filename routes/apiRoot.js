@@ -36,6 +36,10 @@ function apiRoot(req, res) {
       'osdi:scripts' : {
           'href': root + 'scripts',
           'title': 'The collection of scripts in the system'
+      },
+      'osdi:events' : {
+        'href': root + 'events',
+        'title': 'The collection of events in the system'
       }
 
     }
