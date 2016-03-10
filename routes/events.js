@@ -1,7 +1,8 @@
 var config = require('../config'),
     osdi = require('../lib/osdi'),
     _ = require('lodash'),
-    bridge = require('../lib/bridge');
+    bridge = require('../lib/bridge'),
+    selectn = require('selectn');
 
 function getAll(req, res) {
   var vanClient = bridge.createClient(req);
@@ -68,6 +69,74 @@ function recordAttendance(req,res) {
 
 }
 
+function getAttendances(req,res) {
+  var rawBody = req.body;
+
+  var vanClient = bridge.createClient(req);
+
+  var id = 0;
+  if (req && req.params && req.params.id) {
+    id = req.params.id;
+  }
+
+  var event_id = parseInt(id);
+  var vanPaginationParams = bridge.getVANPaginationParams(req);
+
+
+  var resourcePromise = vanClient.events.getAttendances(id);
+
+  bridge.sendMultiResourceResponse(resourcePromise, vanPaginationParams,
+    oneAttendanceTranslator, 'attendances', res);
+}
+
+function oneAttendanceTranslator(vanitem) {
+  var answer = osdi.response.createCommonItem(
+    "Attendance",
+    "");
+
+  var statuses= {
+    'Scheduled' : 'accepted',
+    'Confirmed' : 'accepted'
+  };
+
+  answer['van:signup'] = {
+    shift_id: selectn('shift.EventShiftId', vanitem),
+    shift_name: selectn('shift.name',vanitem),
+    role_id: selectn('role.roleId',vanitem),
+    role_name: selectn('role.name',vanitem),
+    location_id: selectn('location.locationId',vanitem),
+    location_venue: selectn('location.name',vanitem),
+    location_description: selectn('location.displayName',vanitem),
+    status_id: selectn('status.statusId',vanitem),
+    status_name: selectn('status.name',vanitem),
+    person_first_name: selectn('person.firstName',vanitem),
+    person_last_name: selectn('person.lastName',vanitem),
+    person_van_id: selectn('person.vanId',vanitem)
+  };
+  answer.status= statuses[selectn('status.name',vanitem)] || selectn('status.name',vanitem)
+
+  osdi.response.addIdentifier(answer, 'VAN:' + vanitem.eventSignupId);
+  osdi.response.addSelfLink(answer, 'events', vanitem.eventSignupId);
+  osdi.response.addLink(answer,'osdi:person', 'people/' + vanitem.person.vanId);
+  osdi.response.addCurie(answer, config.get('curieTemplate'));
+  osdi.response.addEmbeddedItem(answer,vanitem.person,signupPersonTranslator,'person');
+  answer.raw=vanitem;
+  return answer;
+}
+
+function signupPersonTranslator(vanitem) {
+   var answer = osdi.response.createCommonItem(
+    "Person",
+    "")
+
+  answer.given_name=vanitem.firstName;
+  answer.family_name=vanitem.lastName;
+  answer.description=vanitem.firstName + ' ' + vanitem.lastName;
+  osdi.response.addSelfLink(answer, 'people', vanitem.vanId);
+
+  return answer;
+
+}
 function oneResourceTranslator(vanitem) {
   var answer = osdi.response.createCommonItem(
     vanitem.shortName,
@@ -132,4 +201,5 @@ module.exports = function (app) {
   app.get('/api/v1/events', getAll);
   app.get('/api/v1/events/:id', getOne);
   app.post('/api/v1/events/:id/record_attendance_helper', recordAttendance);
+  app.get('/api/v1/events/:id/attendances',getAttendances);
 };
