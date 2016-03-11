@@ -4,6 +4,8 @@ var config = require('../config'),
     bridge = require('../lib/bridge'),
     selectn = require('selectn');
 
+var Promise=require('bluebird');
+
 function getAll(req, res) {
   var vanClient = bridge.createClient(req);
   var vanPaginationParams = bridge.getVANPaginationParams(req);
@@ -30,27 +32,83 @@ function getOne(req, res) {
 }
 
 
+function valueOrBlank(value) {
+  var answer = value;
+
+  if (!value) {
+    answer = '';
+  }
+
+  return answer;
+}
+
+
 function recordAttendance(req,res) {
+  var vanClient = bridge.createClient(req);
+
+  var matchCandidate = osdi.translator.osdiHelperToVANMatchCandidate(req);
+  var activistCodeIds = osdi.translator.osdiHelperToVANActivistCodes(req);
+  var osdiTranslator = osdi.translator;
+
+  var originalMatchResponse = null;
+
+  var eventId = 0;
+  if (req && req.params && req.params.id) {
+    eventId = req.params.id;
+  }
+  var personPromise = vanClient.people.findOrCreate(matchCandidate).
+  then(function(matchResponse) {
+    originalMatchResponse = matchResponse;
+    var vanId = matchResponse.vanId;
+    return vanClient.people.applyActivistCodes(vanId, activistCodeIds);
+  }).
+  then(function() {
+
+    var signup={
+      "person" : {
+        "vanId" : originalMatchResponse.vanId
+      },
+      "event" : {
+        "eventId" : eventId
+      },
+      "status" : {
+        "statusId" : req.body['van:status_id']
+      },
+      "shift" : {
+        "eventShiftId" : req.body['van:shift_id']
+      },
+      "role" : {
+        "roleId" : req.body['van:role_id']
+      },
+      "location" : {
+        "locationId" : req.body['van:location_id']
+      }
+
+    };
+
+    var expand = ['phones', 'emails', 'addresses'];
+    return vanClient.events.recordAttendance(signup);
+  }).then(function(recordedAttendance) {
+    var signupStub = {
+      signupId: recordedAttendance
+    };
+
+    return vanClient.events.getAttendance(recordedAttendance);
+  });
+
+  bridge.sendSingleResourceResponse(personPromise, osdi.translator.vanSignupToOSDIAttendance,
+    'attendances', res);
+
+  /*
   var rawBody = req.body;
 
   var vanClient = bridge.createClient(req);
 
-  var id = 0;
-  if (req && req.params && req.params.id) {
-    id = req.params.id;
-  }
+
 
   var person_id = parseInt(rawBody.person.identifiers[0]);
   var event_id = parseInt(id);
-  var signup={
-    "person" : {
-      "vanId" : person_id
-    },
-    "event" : {
-      "eventId" : event_id
-    }
 
-  };
 
   console.dir(signup);
 
@@ -66,7 +124,7 @@ function recordAttendance(req,res) {
 
   })
 
-
+*/
 }
 
 function getAttendances(req,res) {
@@ -172,11 +230,11 @@ function oneResourceTranslator(vanitem) {
   });
 
   if ((vanitem.locations) && (vanitem.locations.length >= 1) ) {
-    answer.location = osdi.response.vanLocationToOSDI(vanitem.locations[0])
+    answer.location = osdi.translator.vanLocationToOSDI(vanitem.locations[0])
   }
 
   answer['van:locations'] = _.map(vanitem.locations, function(location) {
-    return osdi.response.vanLocationToOSDI(location);
+    return osdi.translator.vanLocationToOSDI(location);
   });
 
   answer['van:roles'] = _.map(vanitem.roles, function(role) {
