@@ -178,8 +178,7 @@ function translateToOSDIPerson(vanPerson) {
       primary: phone.isPreferred ? true : false,
       number: valueOrBlank(phone.phoneNumber),
       extension: valueOrBlank(phone.ext),
-      number_type: _.indexOf(phone.phoneType, phoneTypes) >= 0 ?
-        phone.phoneType : ''
+      number_type: phone.phoneType
 
     };
   });
