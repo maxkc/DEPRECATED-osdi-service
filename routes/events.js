@@ -1,10 +1,10 @@
 var config = require('../config'),
-    osdi = require('../lib/osdi'),
-    _ = require('lodash'),
-    bridge = require('../lib/bridge'),
-    selectn = require('selectn');
+  osdi = require('../lib/osdi'),
+  _ = require('lodash'),
+  bridge = require('../lib/bridge'),
+  selectn = require('selectn');
 
-var Promise=require('bluebird');
+var Promise = require('bluebird');
 
 // Events
 function getAll(req, res) {
@@ -21,13 +21,20 @@ function getAll(req, res) {
 // Events
 function getOne(req, res) {
   var vanClient = bridge.createClient(req);
-
+  var originalVanEvent = null;
   var id = 0;
   if (req && req.params && req.params.id) {
     id = req.params.id;
   }
   var expand = ['locations', 'codes', 'shifts', 'roles', 'notes'];
-  var resourcePromise = vanClient.events.getOne(id, expand);
+  var resourcePromise = vanClient.events.getOne(id, expand).then(function (vanEvent) {
+    originalVanEvent = vanEvent;
+    var eventTypeId=vanEvent.eventType.eventTypeId;
+    return vanClient.events.getEventType(eventTypeId);
+  }).then(function(vanEventType){
+    originalVanEvent.vanEventTypeBlock=vanEventType;
+    return originalVanEvent;
+  });
 
   bridge.sendSingleResourceResponse(resourcePromise, oneResourceTranslator,
     'events', res);
@@ -41,11 +48,23 @@ function oneResourceTranslator(vanitem) {
   answer.title = vanitem.name;
   answer.summary = answer.description;
 
-  answer['van:event_type']=vanitem.eventType;
-  answer.start_date=vanitem.startDate;
-  answer.end_date=vanitem.endDate;
-  answer.created_date=vanitem.createdDate;
-  answer['van:shifts'] = _.map(vanitem.shifts, function(shift) {
+  answer['van:statuses'] = _.map(selectn('vanEventTypeBlock.statuses',vanitem),function(status){
+    return {
+      status_id: status.statusId,
+      name: status.name,
+      is_event_lead: status.isEventLead
+    }
+  });
+
+  answer['van:event_type'] = {
+    event_type_id: selectn('eventType.eventTypeId',vanitem),
+    name: selectn('eventType.name',vanitem)
+  };
+
+  answer.start_date = vanitem.startDate;
+  answer.end_date = vanitem.endDate;
+  answer.created_date = vanitem.createdDate;
+  answer['van:shifts'] = _.map(vanitem.shifts, function (shift) {
     return {
       event_shift_id: shift.eventShiftId,
       name: shift.name,
@@ -54,15 +73,15 @@ function oneResourceTranslator(vanitem) {
     }
   });
 
-  if ((vanitem.locations) && (vanitem.locations.length >= 1) ) {
+  if ((vanitem.locations) && (vanitem.locations.length >= 1)) {
     answer.location = osdi.translator.vanLocationToOSDI(vanitem.locations[0])
   }
 
-  answer['van:locations'] = _.map(vanitem.locations, function(location) {
+  answer['van:locations'] = _.map(vanitem.locations, function (location) {
     return osdi.translator.vanLocationToOSDI(location);
   });
 
-  answer['van:roles'] = _.map(vanitem.roles, function(role) {
+  answer['van:roles'] = _.map(vanitem.roles, function (role) {
     return {
       role_id: role.roleId,
       name: role.name,
@@ -72,7 +91,7 @@ function oneResourceTranslator(vanitem) {
       goal: role.goal
     }
   });
-  answer['van:codes'] = _.map(vanitem.codes, function(code) {
+  answer['van:codes'] = _.map(vanitem.codes, function (code) {
     return {
       code_id: code.codeId,
       parent_code_id: code.parentCodeId,
@@ -85,11 +104,11 @@ function oneResourceTranslator(vanitem) {
   });
 
   answer['van:voter_registration_batches'] = vanitem.voterRegistrationBatches;
-  answer['van:districtFieldValue']=vanitem.districtFieldValue;
+  answer['van:districtFieldValue'] = vanitem.districtFieldValue;
 
   osdi.response.addIdentifier(answer, 'VAN:' + vanitem.eventId);
   osdi.response.addSelfLink(answer, 'events', vanitem.eventId);
-  osdi.response.addLink(answer,'osdi:attendances', 'events/' + vanitem.eventId + '/attendances');
+  osdi.response.addLink(answer, 'osdi:attendances', 'events/' + vanitem.eventId + '/attendances');
   osdi.response.addCurie(answer, config.get('curieTemplate'));
 
   return answer;
@@ -105,8 +124,25 @@ function valueOrBlank(value) {
   return answer;
 }
 
+function getEventType(req, res) {
+  var vanClient = bridge.createClient(req);
 
-function recordAttendance(req,res) {
+  var id = 0;
+  if (req && req.params && req.params.id) {
+    id = req.params.id;
+  }
+
+  var resourcePromise = vanClient.events.getEventType(id);
+
+  bridge.sendSingleResourceResponse(resourcePromise, oneEventTypeTranslator,
+    'event_types', res);
+}
+
+function oneEventTypeTranslator(vanitem) {
+  return vanitem;
+}
+
+function recordAttendance(req, res) {
   var vanClient = bridge.createClient(req);
 
   var matchCandidate = osdi.translator.osdiHelperToVANMatchCandidate(req);
@@ -119,39 +155,37 @@ function recordAttendance(req,res) {
   if (req && req.params && req.params.id) {
     eventId = req.params.id;
   }
-  var personPromise = vanClient.people.findOrCreate(matchCandidate).
-  then(function(matchResponse) {
+  var personPromise = vanClient.people.findOrCreate(matchCandidate).then(function (matchResponse) {
     originalMatchResponse = matchResponse;
     var vanId = matchResponse.vanId;
     return vanClient.people.applyActivistCodes(vanId, activistCodeIds);
-  }).
-  then(function() {
+  }).then(function () {
 
-    var signup={
-      "person" : {
-        "vanId" : originalMatchResponse.vanId
+    var signup = {
+      "person": {
+        "vanId": originalMatchResponse.vanId
       },
-      "event" : {
-        "eventId" : eventId
+      "event": {
+        "eventId": eventId
       },
-      "status" : {
-        "statusId" : req.body['van:status_id']
+      "status": {
+        "statusId": req.body['van:status_id']
       },
-      "shift" : {
-        "eventShiftId" : req.body['van:shift_id']
+      "shift": {
+        "eventShiftId": req.body['van:shift_id']
       },
-      "role" : {
-        "roleId" : req.body['van:role_id']
+      "role": {
+        "roleId": req.body['van:role_id']
       },
-      "location" : {
-        "locationId" : req.body['van:location_id']
+      "location": {
+        "locationId": req.body['van:location_id']
       }
 
     };
 
     var expand = ['phones', 'emails', 'addresses'];
     return vanClient.events.recordAttendance(signup);
-  }).then(function(recordedAttendance) {
+  }).then(function (recordedAttendance) {
     var signupStub = {
       signupId: recordedAttendance
     };
@@ -164,7 +198,7 @@ function recordAttendance(req,res) {
 
 }
 
-function getAttendances(req,res) {
+function getAttendances(req, res) {
   var rawBody = req.body;
 
   var vanClient = bridge.createClient(req);
@@ -204,58 +238,58 @@ function oneAttendanceTranslator(vanitem) {
     "Attendance",
     "");
 
-  var statuses= {
-    'Scheduled' : 'accepted',
-    'Confirmed' : 'accepted'
+  var statuses = {
+    'Scheduled': 'accepted',
+    'Confirmed': 'accepted'
   };
 
   answer['van:shift'] = {
     shift_id: selectn('shift.eventShiftId', vanitem),
-    name: selectn('shift.name',vanitem)
+    name: selectn('shift.name', vanitem)
   };
 
-  answer['van:location']={
-    location_id: selectn('location.locationId',vanitem),
-    venue: selectn('location.name',vanitem),
-    description: selectn('location.displayName',vanitem)
+  answer['van:location'] = {
+    location_id: selectn('location.locationId', vanitem),
+    venue: selectn('location.name', vanitem),
+    description: selectn('location.displayName', vanitem)
   };
 
   answer['van:role'] = {
-    role_id: selectn('role.roleId',vanitem),
-    name: selectn('role.name',vanitem)
+    role_id: selectn('role.roleId', vanitem),
+    name: selectn('role.name', vanitem)
   };
 
   answer['van:status'] = {
-    status_id: selectn('status.statusId',vanitem),
-    status_name: selectn('status.name',vanitem),
+    status_id: selectn('status.statusId', vanitem),
+    status_name: selectn('status.name', vanitem),
   };
 
   answer['van:person'] = {
-    first_name: selectn('person.firstName',vanitem),
-    last_name: selectn('person.lastName',vanitem),
-    van_id: selectn('person.vanId',vanitem)
+    first_name: selectn('person.firstName', vanitem),
+    last_name: selectn('person.lastName', vanitem),
+    van_id: selectn('person.vanId', vanitem)
   };
 
-  answer.status= statuses[selectn('status.name',vanitem)] || selectn('status.name',vanitem)
+  answer.status = statuses[selectn('status.name', vanitem)] || selectn('status.name', vanitem)
 
   osdi.response.addIdentifier(answer, 'VAN:' + vanitem.eventSignupId);
   osdi.response.addSelfLink(answer, 'attendances', vanitem.eventSignupId);
-  osdi.response.addLink(answer,'osdi:person', 'people/' + vanitem.person.vanId);
-  osdi.response.addLink(answer,'osdi:event', 'events/' + vanitem.event.eventId);
+  osdi.response.addLink(answer, 'osdi:person', 'people/' + vanitem.person.vanId);
+  osdi.response.addLink(answer, 'osdi:event', 'events/' + vanitem.event.eventId);
   osdi.response.addCurie(answer, config.get('curieTemplate'));
-  osdi.response.addEmbeddedItem(answer,vanitem.person,signupPersonTranslator,'person');
+  osdi.response.addEmbeddedItem(answer, vanitem.person, signupPersonTranslator, 'person');
 
   return answer;
 }
 
 function signupPersonTranslator(vanitem) {
-   var answer = osdi.response.createCommonItem(
+  var answer = osdi.response.createCommonItem(
     "Person",
     "")
 
-  answer.given_name=vanitem.firstName;
-  answer.family_name=vanitem.lastName;
-  answer.description=vanitem.firstName + ' ' + vanitem.lastName;
+  answer.given_name = vanitem.firstName;
+  answer.family_name = vanitem.lastName;
+  answer.description = vanitem.firstName + ' ' + vanitem.lastName;
   osdi.response.addSelfLink(answer, 'people', vanitem.vanId);
 
   return answer;
@@ -265,6 +299,7 @@ module.exports = function (app) {
   app.get('/api/v1/events', getAll);
   app.get('/api/v1/events/:id', getOne);
   app.post('/api/v1/events/:id/record_attendance_helper', recordAttendance);
-  app.get('/api/v1/events/:id/attendances',getAttendances);
-  app.get('/api/v1/attendances/:id',getAttendance)
+  app.get('/api/v1/events/:id/attendances', getAttendances);
+  app.get('/api/v1/attendances/:id', getAttendance);
+  app.get('/api/v1/events/types/:id', getEventType)
 };
