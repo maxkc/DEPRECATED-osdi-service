@@ -147,6 +147,21 @@ function getAttendances(req,res) {
     oneAttendanceTranslator, 'attendances', res);
 }
 
+
+function getAttendance(req, res) {
+  var vanClient = bridge.createClient(req);
+
+  var id = 0;
+  if (req && req.params && req.params.id) {
+    id = req.params.id;
+  }
+  //var expand = ['locations', 'codes', 'shifts', 'roles', 'notes'];
+  var resourcePromise = vanClient.events.getAttendance(id);
+
+  bridge.sendSingleResourceResponse(resourcePromise, oneAttendanceTranslator,
+    'attendances', res);
+}
+
 function oneAttendanceTranslator(vanitem) {
   var answer = osdi.response.createCommonItem(
     "Attendance",
@@ -158,7 +173,7 @@ function oneAttendanceTranslator(vanitem) {
   };
 
   answer['van:shift'] = {
-    shift_id: selectn('shift.EventShiftId', vanitem),
+    shift_id: selectn('shift.eventShiftId', vanitem),
     name: selectn('shift.name',vanitem)
   };
 
@@ -187,7 +202,7 @@ function oneAttendanceTranslator(vanitem) {
   answer.status= statuses[selectn('status.name',vanitem)] || selectn('status.name',vanitem)
 
   osdi.response.addIdentifier(answer, 'VAN:' + vanitem.eventSignupId);
-  osdi.response.addSelfLink(answer, 'TODO', vanitem.eventSignupId);
+  osdi.response.addSelfLink(answer, 'attendances', vanitem.eventSignupId);
   osdi.response.addLink(answer,'osdi:person', 'people/' + vanitem.person.vanId);
   osdi.response.addLink(answer,'osdi:event', 'events/' + vanitem.event.eventId);
   osdi.response.addCurie(answer, config.get('curieTemplate'));
@@ -275,4 +290,5 @@ module.exports = function (app) {
   app.get('/api/v1/events/:id', getOne);
   app.post('/api/v1/events/:id/record_attendance_helper', recordAttendance);
   app.get('/api/v1/events/:id/attendances',getAttendances);
+  app.get('/api/v1/attendances/:id',getAttendance)
 };
