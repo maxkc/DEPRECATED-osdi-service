@@ -172,24 +172,6 @@ function valueOrBlank(value) {
   return answer;
 }
 
-function getEventType(req, res) {
-  var vanClient = bridge.createClient(req);
-
-  var id = 0;
-  if (req && req.params && req.params.id) {
-    id = req.params.id;
-  }
-
-  var resourcePromise = vanClient.events.getEventType(id);
-
-  bridge.sendSingleResourceResponse(resourcePromise, oneEventTypeTranslator,
-    'event_types', res);
-}
-
-function oneEventTypeTranslator(vanitem) {
-  return vanitem;
-}
-
 function recordAttendance(req, res) {
   var vanClient = bridge.createClient(req);
 
@@ -349,5 +331,4 @@ module.exports = function (app) {
   app.post('/api/v1/events/:id/record_attendance_helper', recordAttendance);
   app.get('/api/v1/events/:id/attendances', getAttendances);
   app.get('/api/v1/attendances/:id', getAttendance);
-  app.get('/api/v1/events/types/:id', getEventType)
 };
