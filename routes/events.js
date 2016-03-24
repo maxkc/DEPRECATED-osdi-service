@@ -30,7 +30,6 @@ function getAll(req, res) {
     }));
 
     var promises=_.map(eventTypes, function(eventTypeId) {
-      //var vanClient2 = bridge.createClient(req);
 
       var p = vanClient.events.getEventType(eventTypeId).then(function (newEventTypeBlock) {
         vanEventTypeCache[eventTypeId] = newEventTypeBlock;
@@ -92,10 +91,13 @@ function oneResourceTranslator(vanitem) {
     }
   });
 
+  /*
+  * Suppress this for now
   answer['van:event_type'] = {
     event_type_id: selectn('eventType.eventTypeId', vanitem),
     name: selectn('eventType.name', vanitem)
   };
+*/
 
   answer.start_date = vanitem.startDate;
   answer.end_date = vanitem.endDate;
@@ -148,7 +150,7 @@ function oneResourceTranslator(vanitem) {
       created_at: note.createdDate
     }
   });
-  
+
   answer['van:voter_registration_batches'] = vanitem.voterRegistrationBatches;
   answer['van:districtFieldValue'] = vanitem.districtFieldValue;
 
