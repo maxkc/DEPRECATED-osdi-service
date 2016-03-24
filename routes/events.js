@@ -6,13 +6,48 @@ var config = require('../config'),
 
 var Promise = require('bluebird');
 
+
+var reqCache;
+
 // Events
 function getAll(req, res) {
   var vanClient = bridge.createClient(req);
   var vanPaginationParams = bridge.getVANPaginationParams(req);
-  var expand = ['locations', 'codes', 'shifts', 'roles', 'notes'];
+  var vanEventTypeCache = {};
+  var vanOriginalEvents;
 
-  var resourcePromise = vanClient.events.getMany(expand, vanPaginationParams.top, vanPaginationParams.skip);
+  reqCache = req;
+  // 'codes' and 'notes' can be requested vi &expand query param
+  var expand = osdi.request.getExpands(req, ['locations', 'shifts', 'roles']);
+
+  var resourcePromise = vanClient.events.getMany(expand, vanPaginationParams.top, vanPaginationParams.skip).then(function (vanEvents) {
+    var titles;
+    vanOriginalEvents = vanEvents;
+
+    // collect needed event types
+    var eventTypes= _.uniq(_.map(vanEvents.items,function(event) {
+      return selectn('eventType.eventTypeId', event);
+    }));
+
+    var promises=_.map(eventTypes, function(eventTypeId) {
+      //var vanClient2 = bridge.createClient(req);
+
+      var p = vanClient.events.getEventType(eventTypeId).then(function (newEventTypeBlock) {
+        vanEventTypeCache[eventTypeId] = newEventTypeBlock;
+      });
+      return p;
+    });
+
+    return Promise.all(promises);
+
+  }).then(function () {
+    _.forEach(vanOriginalEvents.items,function(event) {
+      var eventTypeId = selectn('eventType.eventTypeId', event);
+      event.vanEventTypeBlock = vanEventTypeCache[eventTypeId];
+
+    });
+    return vanOriginalEvents;
+  });
 
   bridge.sendMultiResourceResponse(resourcePromise, vanPaginationParams,
     oneResourceTranslator, 'events', res);
@@ -26,20 +61,21 @@ function getOne(req, res) {
   if (req && req.params && req.params.id) {
     id = req.params.id;
   }
-  var expand = ['locations', 'codes', 'shifts', 'roles', 'notes'];
+  // 'codes' and 'notes' can be requested vi &expand query param
+  var expand = osdi.request.getExpands(req, ['locations', 'shifts', 'roles']);
+
   var resourcePromise = vanClient.events.getOne(id, expand).then(function (vanEvent) {
     originalVanEvent = vanEvent;
-    var eventTypeId=vanEvent.eventType.eventTypeId;
+    var eventTypeId = vanEvent.eventType.eventTypeId;
     return vanClient.events.getEventType(eventTypeId);
-  }).then(function(vanEventType){
-    originalVanEvent.vanEventTypeBlock=vanEventType;
+  }).then(function (vanEventType) {
+    originalVanEvent.vanEventTypeBlock = vanEventType;
     return originalVanEvent;
   });
 
   bridge.sendSingleResourceResponse(resourcePromise, oneResourceTranslator,
     'events', res);
 }
-
 
 function oneResourceTranslator(vanitem) {
   var answer = osdi.response.createCommonItem(
@@ -48,7 +84,7 @@ function oneResourceTranslator(vanitem) {
   answer.title = vanitem.name;
   answer.summary = answer.description;
 
-  answer['van:statuses'] = _.map(selectn('vanEventTypeBlock.statuses',vanitem),function(status){
+  answer['van:statuses'] = _.map(selectn('vanEventTypeBlock.statuses', vanitem), function (status) {
     return {
       status_id: status.statusId,
       name: status.name,
@@ -57,8 +93,8 @@ function oneResourceTranslator(vanitem) {
   });
 
   answer['van:event_type'] = {
-    event_type_id: selectn('eventType.eventTypeId',vanitem),
-    name: selectn('eventType.name',vanitem)
+    event_type_id: selectn('eventType.eventTypeId', vanitem),
+    name: selectn('eventType.name', vanitem)
   };
 
   answer.start_date = vanitem.startDate;
@@ -103,6 +139,16 @@ function oneResourceTranslator(vanitem) {
     }
   });
 
+  answer['van:notes'] = _.map(vanitem.notes,function(note){
+    return {
+      note_id: note.noteId,
+      text: note.text,
+      is_view_restricted: note.isViewRestricted,
+      category: note.category,
+      created_at: note.createdDate
+    }
+  });
+  
   answer['van:voter_registration_batches'] = vanitem.voterRegistrationBatches;
   answer['van:districtFieldValue'] = vanitem.districtFieldValue;
 
