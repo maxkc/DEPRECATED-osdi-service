@@ -19,8 +19,9 @@ function getAll(req, res) {
   reqCache = req;
   // 'codes' and 'notes' can be requested vi &expand query param
   var expand = osdi.request.getExpands(req, ['locations', 'shifts', 'roles']);
-
-  var resourcePromise = vanClient.events.getMany(expand, vanPaginationParams.top, vanPaginationParams.skip).then(function (vanEvents) {
+  var filter = osdi.request.getFilter(req);
+  
+  var resourcePromise = vanClient.events.getMany(expand, vanPaginationParams.top, vanPaginationParams.skip,filter).then(function (vanEvents) {
     var titles;
     vanOriginalEvents = vanEvents;
 
