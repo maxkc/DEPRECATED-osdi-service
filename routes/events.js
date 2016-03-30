@@ -20,7 +20,7 @@ function getAll(req, res) {
   // 'codes' and 'notes' can be requested vi &expand query param
   var expand = osdi.request.getExpands(req, ['locations', 'shifts', 'roles']);
   var filter = osdi.request.getFilter(req);
-  
+
   var resourcePromise = vanClient.events.getMany(expand, vanPaginationParams.top, vanPaginationParams.skip,filter).then(function (vanEvents) {
     var titles;
     vanOriginalEvents = vanEvents;
@@ -82,7 +82,7 @@ function oneResourceTranslator(vanitem) {
     vanitem.shortName,
     vanitem.description);
   answer.title = vanitem.name;
-  answer.summary = answer.description;
+  answer.summary = answer.title;
 
   answer['van:statuses'] = _.map(selectn('vanEventTypeBlock.statuses', vanitem), function (status) {
     return {
