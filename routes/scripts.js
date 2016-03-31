@@ -110,7 +110,7 @@ function scriptElementToOSDI(elem) {
     ose.sequence = parseInt(elem.attributes['SortOrder']);
   }
 
-  osdi.response.addEmbeddedItems(ose, [elem], oneResourceTranslator, 'questions');
+  osdi.response.addEmbeddedItem(ose, elem, oneResourceTranslator, 'question');
 
   return ose;
 }
