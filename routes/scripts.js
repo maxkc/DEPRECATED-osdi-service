@@ -1,6 +1,7 @@
 var soap = require('soap');
 var config = require('../config'),
   osdi = require('../lib/osdi'),
+  _ = require('lodash'),
   bridge = require('../lib/bridge');
 
 var xmlParseString = require('xml2js').parseString;
@@ -20,6 +21,13 @@ function getScript(req, res) {
 
   var apiToken = osdi.request.getAPIToken(req);
   var credentials = getCredentials(apiToken);
+
+  var osdi_result;
+
+  var sqid=null;
+  if (req && req.params && req.params.sqid) {
+    sqid = req.params.sqid;
+  }
 
   var id = 0;
   if (req && req.params && req.params.id) {
@@ -49,7 +57,13 @@ function getScript(req, res) {
         handleSoapFault(result.statusCode, result.body, res,'script');
 
       } else {
-        res.send(scriptToOSDI(result.GetScriptResult));
+        if ( sqid == null ) {
+          osdi_result=scriptToOSDI(result.GetScriptResult);
+        } else {
+          osdi_result= singleScriptElementToOSDI(result.GetScriptResult,sqid);
+        }
+
+        res.send(osdi_result);
         if (config.get('node_env') == 'development') {
           console.log(client.lastRequest);
           console.log(result.GetScriptResult);
@@ -100,7 +114,10 @@ function handleSoapFault(responseCode, responseBody, res, resourceType) {
 
 
 }
-function scriptElementToOSDI(elem) {
+function scriptElementToOSDI(object) {
+  var elem=object.element;
+  var scriptId=object.scriptId;
+
   var ose = osdi.response.createCommonItem(
     elem.attributes['Name'],
     elem.ScriptQuestion
@@ -111,8 +128,11 @@ function scriptElementToOSDI(elem) {
   }
 
   osdi.response.addEmbeddedItem(ose, elem, oneResourceTranslator, 'question');
-
+  osdi.response.addSelfLink(ose,'scripts/' + scriptId + '/script_questions',elem.attributes['SortOrder']);
+  osdi.response.addLink(ose, 'osdi:question','questions/' + elem.attributes['ID']);
+  osdi.response.addLink(ose, 'osdi:script','scripts/' + scriptId);
   return ose;
+
 }
 
 function scriptToOSDI(script) {
@@ -130,11 +150,32 @@ function scriptToOSDI(script) {
   osdi.response.addSelfLink(oscript, 'scripts', script.attributes['ID']);
 
   if (elements=selectn('ScriptElements.ScriptElement',script))
-  osdi.response.addEmbeddedItems(oscript, elements, scriptElementToOSDI, 'script_questions');
+    /* This is a bit awkward because we need to pass in the scriptId for the link in the script_question, but we can't control the argument list to the translator function passed into addEmbeddedItems so we create the intermediate object*/
+    var objects= _.map(elements,function(element){
+      return {
+        scriptId: script.attributes['ID'],
+        element: element
+      }
+    });
+  osdi.response.addEmbeddedItems(oscript, objects, scriptElementToOSDI, 'script_questions');
 
   return oscript;
 }
 
+function singleScriptElementToOSDI(script,sqid) {
+  var element=null;
+  var oelement=null;
+
+  if (element=selectn('ScriptElements.ScriptElement',script)[sqid]) {
+    var object = {
+      scriptId: script.attributes['ID'],
+      element: element
+    };
+    oelement=scriptElementToOSDI(object);
+  }
+
+  return oelement;
+}
 
 function oneResourceTranslator(sq) {
   var answer = osdi.response.createCommonItem(
@@ -256,5 +297,6 @@ function scriptCollectionItemToOSDI(script) {
 module.exports = function (app) {
   app.get('/api/v1/scripts', listScripts);
   app.get('/api/v1/scripts/:id', getScript);
+  app.get('/api/v1/scripts/:id/script_questions/:sqid',getScript);
 
 };
