@@ -86,6 +86,7 @@ function handleSoapFault(responseCode, responseBody, res, resourceType) {
         responseCode = 404;
         break;
       case 'VAN_ERROR_CODE_101':
+      case 'VAN_ERROR_CODE_003':
         responseCode = 403;
         break;
       default:
@@ -235,7 +236,7 @@ function listScripts(req, res) {
     client["ListScripts"](args, function (err, result) {
 
       if (err) {
-        res.send(result.body);
+        handleSoapFault(result.statusCode, result.body, res,'script');
       } else {
         res.send(scriptCollectionToOSDI(result.ListScriptsResult.Scripts.Script));
         if (config.get('node_env') == 'development') {
