@@ -14,6 +14,7 @@ var express = require('express'),
 
 app.use(iefix({ contentType: 'application/x-www-form-urlencoded' }));
 app.use(bodyParser.text({ 'type': 'application/hal+json', 'limit' : '50mb' }));
+app.use(bodyParser.text({ 'type': 'application/json', 'limit' : '50mb' }));
 app.use(halParser);
 app.use(requireHttps);
 app.use(cors());
