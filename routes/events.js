@@ -224,7 +224,7 @@ function recordAttendance(req, res) {
     return vanClient.events.getAttendance(recordedAttendance);
   });
 
-  bridge.sendSingleResourceResponse(personPromise, osdi.translator.vanSignupToOSDIAttendance,
+  bridge.sendSingleResourceResponse(personPromise, oneAttendanceTranslator,
     'attendances', res);
 
 }
@@ -308,7 +308,7 @@ function oneAttendanceTranslator(vanitem) {
   osdi.response.addLink(answer, 'osdi:person', 'people/' + vanitem.person.vanId);
   osdi.response.addLink(answer, 'osdi:event', 'events/' + vanitem.event.eventId);
   osdi.response.addCurie(answer, config.get('curieTemplate'));
-  osdi.response.addEmbeddedItem(answer, vanitem.person, signupPersonTranslator, 'person');
+  osdi.response.addEmbeddedItem(answer, vanitem.person, signupPersonTranslator, 'personhint');
 
   return answer;
 }
