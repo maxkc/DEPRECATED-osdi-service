@@ -105,7 +105,7 @@ function oneResourceTranslator(vanitem) {
   answer.created_date = vanitem.createdDate;
   answer['van:shifts'] = _.map(vanitem.shifts, function (shift) {
     return {
-      event_shift_id: shift.eventShiftId,
+      shift_id: shift.eventShiftId,
       name: shift.name,
       start_date: shift.startTime,
       end_time: shift.endTime
@@ -200,16 +200,16 @@ function recordAttendance(req, res) {
         "eventId": eventId
       },
       "status": {
-        "statusId": req.body['van:status_id']
+        "statusId": req.body['van:status_id'] || selectn('van:status.status_id',req.body)
       },
       "shift": {
-        "eventShiftId": req.body['van:shift_id']
+        "eventShiftId": req.body['van:shift_id'] || selectn('van:shift.shift_id',req.body)
       },
       "role": {
-        "roleId": req.body['van:role_id']
+        "roleId": req.body['van:role_id'] || selectn('van:role.role_id',req.body)
       },
       "location": {
-        "locationId": req.body['van:location_id']
+        "locationId": req.body['van:location_id'] || selectn('van:location.location_id',req.body)
       }
 
     };
