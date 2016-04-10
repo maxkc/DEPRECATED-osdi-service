@@ -27,7 +27,7 @@ function apiRoot(req, res) {
         'title': 'The collection of people in the system'
       },
       'osdi:person_signup_helper': {
-          'href': root + 'people/person_signup',
+          'href': root + 'people/person_signup_helper',
           'title': 'The person signup helper for the system'
       }
     }
