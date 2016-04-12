@@ -47,7 +47,6 @@ function getScript(req, res) {
     client.addSoapHeader({
       'Header': {
         'APIKey': credentials.apiKey,
-        //'32392763-4335-446C-BDD7-298D10A5E3BE',
         'DatabaseMode': dbMode
       }
     }, '', 'myvan', 'https://api.securevan.com/Services/V3/');
