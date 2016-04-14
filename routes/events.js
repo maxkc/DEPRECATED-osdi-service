@@ -153,7 +153,7 @@ function oneResourceTranslator(vanitem) {
   });
 
   answer['van:voter_registration_batches'] = vanitem.voterRegistrationBatches;
-  answer['van:districtFieldValue'] = vanitem.districtFieldValue;
+  answer['van:district_field_value'] = vanitem.districtFieldValue;
 
   osdi.response.addIdentifier(answer, 'VAN:' + vanitem.eventId);
   osdi.response.addSelfLink(answer, 'events', vanitem.eventId);
