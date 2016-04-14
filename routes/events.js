@@ -108,7 +108,7 @@ function oneResourceTranslator(vanitem) {
       shift_id: shift.eventShiftId,
       name: shift.name,
       start_date: shift.startTime,
-      end_time: shift.endTime
+      end_date: shift.endTime
     }
   });
 
