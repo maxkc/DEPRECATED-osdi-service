@@ -158,6 +158,8 @@ function oneResourceTranslator(vanitem) {
   osdi.response.addIdentifier(answer, 'VAN:' + vanitem.eventId);
   osdi.response.addSelfLink(answer, 'events', vanitem.eventId);
   osdi.response.addLink(answer, 'osdi:attendances', 'events/' + vanitem.eventId + '/attendances');
+  osdi.response.addLink(answer,'osdi:record_attendance_helper', 'events/' +
+    vanitem.eventId + '/record_attendance_helper');
   osdi.response.addCurie(answer, config.get('curieTemplate'));
 
   return answer;
