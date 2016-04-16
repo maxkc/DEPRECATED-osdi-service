@@ -11,11 +11,11 @@ describe('AEP', function() {
   it('should return basic details about service', function(done) {
     supertest(app).
       get('/api/v1/').
-      set('Accept', 'application/hal+json').
+      set('Accept', 'application/json').
       expect(200, function(err, res) {
         var body =  JSON.parse(res.text);
         should.equal(res.headers['content-type'],
-          'application/hal+json; charset=utf-8');
+          'application/json; charset=utf-8');
         should.equal(body.motd, 'Welcome to the NGP VAN OSDI Service!');
         should.equal(body.max_pagesize, 200);
         should.equal(body.vendor_name, 'NGP VAN, Inc.');
