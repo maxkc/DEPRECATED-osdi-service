@@ -10,6 +10,9 @@ function apiRoot(req, res) {
     product_name: 'VAN',
     osdi_version: '1.0.3',
     _links: {
+      "curies":[
+        {"name":"osdi","href":"http://opensupporter.github.io/osdi-docs/{rel}","templated":true}
+        ],
       self: {
         href: root,
         title: 'NGP VAN OSDI Service Entry Point'
@@ -29,7 +32,16 @@ function apiRoot(req, res) {
       'osdi:person_signup_helper': {
           'href': root + 'people/person_signup',
           'title': 'The person signup helper for the system'
+      },
+      'osdi:scripts' : {
+          'href': root + 'scripts',
+          'title': 'The collection of scripts in the system'
+      },
+      'osdi:events' : {
+        'href': root + 'events',
+        'title': 'The collection of events in the system'
       }
+
     }
   };
 
