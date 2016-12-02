@@ -1,5 +1,6 @@
 var config = require('../config'),
   osdi = require('../lib/osdi'),
+  ngpvanAPIClient = require('../lib/ngpvan-api-client'),  
   _ = require('lodash'),
   bridge = require('../lib/bridge'),
   selectn = require('selectn');
@@ -31,14 +32,13 @@ function getAll(req, res) {
     }));
 
     var promises=_.map(eventTypes, function(eventTypeId) {
-
       var p = vanClient.events.getEventType(eventTypeId).then(function (newEventTypeBlock) {
         vanEventTypeCache[eventTypeId] = newEventTypeBlock;
       });
       return p;
     });
 
-    return Promise.all(promises);
+    return Promise.all(promises).catch(ngpvanAPIClient.errors.NotFound, function(ex) {});
 
   }).then(function () {
     _.forEach(vanOriginalEvents.items,function(event) {
