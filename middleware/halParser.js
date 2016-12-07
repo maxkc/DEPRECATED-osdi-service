@@ -1,20 +1,24 @@
-
 module.exports = function (req, res, next) {
-  try {
-    var rawBody = req.body;
 
-    if (typeof rawBody !== 'object') {
-      var parsedBody = JSON.parse(rawBody);
-      req.body = parsedBody;
+  // Don't attempt to parse the body when the method is GET
+  if (req.method != "GET") {
+
+    try {
+      var rawBody = req.body;
+
+      if (typeof rawBody !== 'object') {
+        var parsedBody = JSON.parse(rawBody);
+        req.body = parsedBody;
+      }
+    }
+    catch (e) {
+      console.trace('Exception while parsing body: ', req.body, e);
+      return sendBadJSON(req, res);
     }
   }
-  catch (e) {
-    console.trace('Exception while parsing body: ', req.body, e);
-    return sendBadJSON(req, res);
-  }
-
   next();
-};
+}
+;
 
 
 function sendBadJSON(req, res) {
