@@ -239,8 +239,8 @@ function listScripts(req, res) {
       } else {
         res.send(scriptCollectionToOSDI(result.ListScriptsResult.Scripts.Script));
         if (config.get('node_env') == 'development') {
-          //console.log(client.lastRequest);
-          //console.log(result.body);
+          console.log(client.lastRequest);
+          console.log(result.body);
         }
       }
     });
